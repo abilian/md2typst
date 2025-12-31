@@ -1,0 +1,53 @@
+# Corrections and divergences from Pandoc output
+# These document intentional differences in our Typst generation style
+
+style_mappings:
+  # Our convention vs Pandoc convention
+  emphasis:
+    ours: "_text_"
+    pandoc: "#emph[text]"
+    reason: "Typst native syntax preferred for simplicity"
+
+  strong:
+    ours: "*text*"
+    pandoc: "#strong[text]"
+    reason: "Typst native syntax preferred for simplicity"
+
+  blockquote:
+    ours: "#quote[...]"
+    pandoc: "#quote(block: true)[...]"
+    reason: "block: true is default for block-level quotes"
+
+  thematic_break:
+    ours: "#line(length: 100%)"
+    pandoc: "#horizontalrule"
+    reason: "More explicit; horizontalrule is Pandoc-specific"
+
+  images:
+    ours: "#image(...)"
+    pandoc: "#figure(image(...), caption: [...])"
+    reason: "Simpler output; figure wrapper not always needed"
+
+  headings:
+    ours: "= Heading"
+    pandoc: "= Heading\n<heading-slug>"
+    reason: "Labels/anchors added by Pandoc for cross-references"
+
+  ordered_list:
+    ours: "1. Item"
+    pandoc: "+ Item"
+    reason: "Explicit numbering preserved from Markdown"
+
+  tables:
+    ours: "#table(...)"
+    pandoc: "#figure(align(center)[#table(...)], kind: table)"
+    reason: "Simpler output; figure wrapper optional"
+
+# Specific file corrections
+file_corrections: []
+  # Example:
+  # - file: "example.typ"
+  #   line: 5
+  #   original: "#emph[text]"
+  #   corrected: "_text_"
+  #   reason: "Style preference"

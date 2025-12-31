@@ -1,0 +1,43 @@
+[project]
+name = "mkd2typst"
+version = "0.1.0"
+description = "Markdown to Typst converter with multiple parser support"
+readme = "README.md"
+authors = [
+    { name = "Stefane Fermigier", email = "sf@abilian.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "markdown-it-py>=3.0.0",
+    "click>=8.0.0",
+    "mistune>=3.0.0",
+    "marko>=2.0.0",
+]
+
+[project.scripts]
+mkd2typst = "mkd2typst:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-benchmark>=4.0.0",
+    "hypothesis>=6.0.0",
+    "pyyaml>=6.0.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.13,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-m 'not benchmark'"
+markers = [
+    "unit: Unit tests (fast, isolated)",
+    "integration: Integration tests (multiple components)",
+    "e2e: End-to-end tests (full workflow)",
+    "benchmark: Benchmark tests (slow, run with -m benchmark)",
+    "slow: Slow tests",
+]
