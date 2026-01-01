@@ -59,7 +59,7 @@ class TypstGenerator:
 
     def generate(self, doc: Document) -> str:
         """Convert a Document AST to Typst source code."""
-        parts = []
+        parts: list[str] = []
         for child in doc.children:
             result = self.visit(child)
             if result:
@@ -108,7 +108,7 @@ class TypstGenerator:
 
         Uses Typst's #quote block or #block with custom styling.
         """
-        content_parts = []
+        content_parts: list[str] = []
         for child in node.children:
             result = self.visit(child)
             if result:
@@ -121,7 +121,7 @@ class TypstGenerator:
 
     def visit_List(self, node: List) -> str:
         """Convert list to Typst."""
-        items = []
+        items: list[str] = []
         old_in_list = self._in_list
         self._in_list = True
 
@@ -143,7 +143,7 @@ class TypstGenerator:
 
     def _visit_list_item(self, node: ListItem) -> str:
         """Convert a list item's content."""
-        parts = []
+        parts: list[str] = []
         for i, child in enumerate(node.children):
             result = self.visit(child)
             if result:
@@ -199,7 +199,7 @@ class TypstGenerator:
 
         # Body rows
         for row in node.rows:
-            row_cells = []
+            row_cells: list[str] = []
             for cell in row:
                 cell_content = self._visit_children_inline(cell.children)
                 row_cells.append(f"[{cell_content}]")
@@ -219,7 +219,7 @@ class TypstGenerator:
 
     def _visit_children_inline(self, children: list[Node]) -> str:
         """Visit all children and concatenate results."""
-        parts = []
+        parts: list[str] = []
         for child in children:
             result = self.visit(child)
             parts.append(result)

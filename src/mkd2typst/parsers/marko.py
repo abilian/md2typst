@@ -6,7 +6,10 @@ converting its AST to our AST representation.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 import marko
 from marko import block as marko_block, inline as marko_inline
@@ -76,10 +79,10 @@ class MarkoParser(MarkdownParser):
 
     def _convert_document(self, doc: marko_block.Document) -> Document:
         """Convert marko Document to our Document."""
-        children = self._convert_children(list(doc.children))
+        children = self._convert_children(doc.children)
         return Document(children=children)
 
-    def _convert_children(self, children: list) -> list[Node]:
+    def _convert_children(self, children: Iterable[Any]) -> list[Node]:
         """Convert a list of marko elements to AST nodes."""
         nodes: list[Node] = []
 
@@ -132,7 +135,7 @@ class MarkoParser(MarkdownParser):
             return ThematicBreak()
 
         if isinstance(element, marko_block.HTMLBlock):
-            return HtmlBlock(content=element.children)
+            return HtmlBlock(content=self._get_raw_text(element.children))
 
         if isinstance(element, marko_block.BlankLine):
             return None
@@ -178,7 +181,7 @@ class MarkoParser(MarkdownParser):
 
         return Table(header=header, rows=rows, alignments=alignments)
 
-    def _convert_inline_children(self, children: list) -> list[Node]:
+    def _convert_inline_children(self, children: Iterable[Any]) -> list[Node]:
         """Convert inline elements."""
         nodes: list[Node] = []
 
@@ -250,7 +253,7 @@ class MarkoParser(MarkdownParser):
             return children
 
         if isinstance(children, list):
-            parts = []
+            parts: list[str] = []
             for child in children:
                 if isinstance(child, str):
                     parts.append(child)
