@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mkd2typst.ast import (
+from md2typst.ast import (
     BlockQuote,
     Code,
     CodeBlock,

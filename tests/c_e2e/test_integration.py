@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mkd2typst import convert
+from md2typst import convert
 
 pytestmark = pytest.mark.e2e
 

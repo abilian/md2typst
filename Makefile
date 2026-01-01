@@ -20,7 +20,7 @@ test:
 	uv run pytest
 
 test-cov:
-	uv run pytest --cov=mkd2typst --cov-report=html --cov-report=term tests
+	uv run pytest --cov=md2typst --cov-report=html --cov-report=term tests
 
 clean:
 	rm -rf .pytest_cache .ruff_cache dist build __pycache__ .mypy_cache \

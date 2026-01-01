@@ -1,4 +1,4 @@
-# mkd2typst
+# md2typst
 
 A robust Markdown to [Typst](https://typst.app/) converter in Python with support for multiple Markdown parsers.
 
@@ -14,10 +14,10 @@ A robust Markdown to [Typst](https://typst.app/) converter in Python with suppor
 
 ```bash
 # Using pip
-pip install mkd2typst
+pip install md2typst
 
 # Using uv
-uv add mkd2typst
+uv add md2typst
 ```
 
 ## Quick Start
@@ -26,22 +26,22 @@ uv add mkd2typst
 
 ```bash
 # Convert a file
-mkd2typst input.md -o output.typ
+md2typst input.md -o output.typ
 
 # Convert from stdin
-echo "# Hello **World**" | mkd2typst
+echo "# Hello **World**" | md2typst
 
 # Use a specific parser
-mkd2typst --parser mistune input.md
+md2typst --parser mistune input.md
 
 # List available parsers
-mkd2typst --list-parsers
+md2typst --list-parsers
 ```
 
 ### Python API
 
 ```python
-from mkd2typst import convert
+from md2typst import convert
 
 # Simple conversion
 typst = convert("# Hello **World**")
@@ -54,8 +54,8 @@ print(typst)
 # Output: #strike[deleted]
 
 # With configuration
-from mkd2typst import convert_with_config
-from mkd2typst.config import Config
+from md2typst import convert_with_config
+from md2typst.config import Config
 
 config = Config(parser="marko", plugins=["gfm"])
 typst = convert_with_config("| A | B |\n|---|---|\n| 1 | 2 |", config)
@@ -93,12 +93,12 @@ Configuration is loaded from multiple sources (highest priority first):
 
 1. CLI arguments (`--parser`, `--plugin`)
 2. Explicit config file (`--config path/to/config.toml`)
-3. `.mkd2typst.toml` in the current or parent directories
-4. `[tool.mkd2typst]` section in `pyproject.toml`
+3. `.md2typst.toml` in the current or parent directories
+4. `[tool.md2typst]` section in `pyproject.toml`
 
 ### Example Configuration
 
-**.mkd2typst.toml**:
+**.md2typst.toml**:
 ```toml
 parser = "mistune"
 plugins = ["strikethrough", "table"]
@@ -109,7 +109,7 @@ html = true
 
 **pyproject.toml**:
 ```toml
-[tool.mkd2typst]
+[tool.md2typst]
 parser = "markdown-it"
 plugins = ["gfm"]
 ```
@@ -117,7 +117,7 @@ plugins = ["gfm"]
 ### CLI Options
 
 ```bash
-mkd2typst --help
+md2typst --help
 
 Options:
   -o, --output FILE      Output file (default: stdout)
@@ -133,8 +133,8 @@ Options:
 ### Setup
 
 ```bash
-git clone https://github.com/user/mkd2typst.git
-cd mkd2typst
+git clone https://github.com/user/md2typst.git
+cd md2typst
 uv sync
 ```
 

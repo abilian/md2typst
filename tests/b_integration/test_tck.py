@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from mkd2typst import convert
+from md2typst import convert
 
 pytestmark = pytest.mark.integration
 

@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import pytest
 
-from mkd2typst import convert
-from mkd2typst.parsers import get_parser
+from md2typst import convert
+from md2typst.parsers import get_parser
 
 pytestmark = pytest.mark.benchmark
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mkd2typst.ast import (
+from md2typst.ast import (
     BlockQuote,
     Code,
     CodeBlock,
@@ -19,8 +19,8 @@ from mkd2typst.ast import (
     Text,
     ThematicBreak,
 )
-from mkd2typst.parsers import get_parser, list_parsers
-from mkd2typst.parsers.markdown_it import MarkdownItParser
+from md2typst.parsers import get_parser, list_parsers
+from md2typst.parsers.markdown_it import MarkdownItParser
 
 pytestmark = pytest.mark.integration
 

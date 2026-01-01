@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 import marko
 from marko import block as marko_block, inline as marko_inline
 
-from mkd2typst.ast import (
+from md2typst.ast import (
     BlockQuote,
     Code,
     CodeBlock,
@@ -80,7 +80,7 @@ class MarkoParser(MarkdownParser):
     def _convert_document(self, doc: marko_block.Document) -> Document:
         """Convert marko Document to our Document."""
         children = self._convert_children(doc.children)
-        return Document(children=children)
+        return Document(children=tuple(children))
 
     def _convert_children(self, children: Iterable[Any]) -> list[Node]:
         """Convert a list of marko elements to AST nodes."""
@@ -100,12 +100,12 @@ class MarkoParser(MarkdownParser):
         # Block elements
         if isinstance(element, marko_block.Paragraph):
             children = self._convert_inline_children(element.children)
-            return Paragraph(children=children)
+            return Paragraph(children=tuple(children))
 
         if isinstance(element, marko_block.Heading):
             level = element.level
             children = self._convert_inline_children(element.children)
-            return Heading(level=level, children=children)
+            return Heading(level=level, children=tuple(children))
 
         if isinstance(element, marko_block.FencedCode):
             lang = element.lang if element.lang else None
@@ -119,7 +119,7 @@ class MarkoParser(MarkdownParser):
 
         if isinstance(element, marko_block.Quote):
             children = self._convert_children(element.children)
-            return BlockQuote(children=children)
+            return BlockQuote(children=tuple(children))
 
         if isinstance(element, marko_block.List):
             ordered = element.ordered
@@ -128,8 +128,8 @@ class MarkoParser(MarkdownParser):
             for child in element.children:
                 if isinstance(child, marko_block.ListItem):
                     item_children = self._convert_children(child.children)
-                    items.append(ListItem(children=item_children))
-            return List(ordered=ordered, items=items, start=start)
+                    items.append(ListItem(children=tuple(item_children)))
+            return List(ordered=ordered, items=tuple(items), start=start)
 
         if isinstance(element, marko_block.ThematicBreak):
             return ThematicBreak()
@@ -149,7 +149,7 @@ class MarkoParser(MarkdownParser):
         if hasattr(element, "children"):
             children = self._convert_inline_children(element.children)
             if children:
-                return Paragraph(children=children)
+                return Paragraph(children=tuple(children))
 
         return None
 
@@ -166,7 +166,7 @@ class MarkoParser(MarkdownParser):
                 align = getattr(cell, "align", None)
                 alignments.append(align)
                 cell_children = self._convert_inline_children(cell.children)
-                header.append(TableCell(children=cell_children))
+                header.append(TableCell(children=tuple(cell_children)))
 
         # Process body rows (skip the first child as it's the header)
         body_rows = element.children[1:] if element.head else element.children
@@ -176,10 +176,14 @@ class MarkoParser(MarkdownParser):
                 row_cells: list[TableCell] = []
                 for cell in row.children:
                     cell_children = self._convert_inline_children(cell.children)
-                    row_cells.append(TableCell(children=cell_children))
+                    row_cells.append(TableCell(children=tuple(cell_children)))
                 rows.append(row_cells)
 
-        return Table(header=header, rows=rows, alignments=alignments)
+        return Table(
+            header=tuple(header),
+            rows=tuple(tuple(r) for r in rows),
+            alignments=tuple(alignments),
+        )
 
     def _convert_inline_children(self, children: Iterable[Any]) -> list[Node]:
         """Convert inline elements."""
@@ -211,23 +215,23 @@ class MarkoParser(MarkdownParser):
 
         if isinstance(element, marko_inline.Emphasis):
             children = self._convert_inline_children(element.children)
-            return Emphasis(children=children)
+            return Emphasis(children=tuple(children))
 
         if isinstance(element, marko_inline.StrongEmphasis):
             children = self._convert_inline_children(element.children)
-            return Strong(children=children)
+            return Strong(children=tuple(children))
 
         # Handle GFM Strikethrough
         element_type = type(element).__name__
         if element_type == "Strikethrough":
             children = self._convert_inline_children(element.children)
-            return Strikethrough(children=children)
+            return Strikethrough(children=tuple(children))
 
         if isinstance(element, marko_inline.Link):
             url = element.dest or ""
             title = element.title
             children = self._convert_inline_children(element.children)
-            return Link(url=url, children=children, title=title)
+            return Link(url=url, children=tuple(children), title=title)
 
         if isinstance(element, marko_inline.Image):
             url = element.dest or ""

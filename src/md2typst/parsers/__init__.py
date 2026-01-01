@@ -12,10 +12,10 @@ if TYPE_CHECKING:
 
 # Parser registry: name -> module path
 _PARSERS: dict[str, str] = {
-    "markdown-it": "mkd2typst.parsers.markdown_it",
-    "markdown-it-py": "mkd2typst.parsers.markdown_it",  # Alias
-    "mistune": "mkd2typst.parsers.mistune",
-    "marko": "mkd2typst.parsers.marko",
+    "markdown-it": "md2typst.parsers.markdown_it",
+    "markdown-it-py": "md2typst.parsers.markdown_it",  # Alias
+    "mistune": "md2typst.parsers.mistune",
+    "marko": "md2typst.parsers.marko",
 }
 
 DEFAULT_PARSER = "markdown-it"

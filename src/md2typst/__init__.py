@@ -1,4 +1,4 @@
-"""mkd2typst - Markdown to Typst converter."""
+"""md2typst - Markdown to Typst converter."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ import contextlib
 from pathlib import Path
 from typing import Any
 
-from mkd2typst.ast import Document
-from mkd2typst.config import Config, load_config
-from mkd2typst.generator import TypstGenerator, generate_typst
-from mkd2typst.parsers import get_parser, list_parsers
+from md2typst.ast import Document
+from md2typst.config import Config, load_config
+from md2typst.generator import TypstGenerator, generate_typst
+from md2typst.parsers import get_parser, list_parsers
 
 __version__ = "0.1.0"
 
@@ -114,7 +114,7 @@ def main() -> None:
         INPUT is the Markdown file to convert. Use - for stdin.
         """
         if list_parsers:
-            from mkd2typst.parsers import list_parsers as lp
+            from md2typst.parsers import list_parsers as lp
 
             click.echo("Available parsers:")
             for name in lp():

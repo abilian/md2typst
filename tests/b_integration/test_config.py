@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mkd2typst.config import (
+from md2typst.config import (
     Config,
     find_config_file,
     find_pyproject_toml,
@@ -88,14 +88,14 @@ class TestFindConfigFile:
     """Test finding configuration files."""
 
     def test_find_in_current_dir(self, tmp_path):
-        config_file = tmp_path / ".mkd2typst.toml"
+        config_file = tmp_path / ".md2typst.toml"
         config_file.write_text('parser = "mistune"\n')
 
         result = find_config_file(tmp_path)
         assert result == config_file
 
     def test_find_in_parent_dir(self, tmp_path):
-        config_file = tmp_path / ".mkd2typst.toml"
+        config_file = tmp_path / ".md2typst.toml"
         config_file.write_text('parser = "mistune"\n')
 
         subdir = tmp_path / "subdir"
@@ -127,10 +127,10 @@ class TestFindConfigFile:
 
 
 class TestLoadConfigFromFile:
-    """Test loading config from .mkd2typst.toml."""
+    """Test loading config from .md2typst.toml."""
 
     def test_load_basic_config(self, tmp_path):
-        config_file = tmp_path / ".mkd2typst.toml"
+        config_file = tmp_path / ".md2typst.toml"
         config_file.write_text("""
 parser = "mistune"
 plugins = ["strikethrough", "table"]
@@ -146,7 +146,7 @@ linkify = false
         assert result["parser_options"]["linkify"] is False
 
     def test_load_empty_config(self, tmp_path):
-        config_file = tmp_path / ".mkd2typst.toml"
+        config_file = tmp_path / ".md2typst.toml"
         config_file.write_text("")
         result = load_config_from_file(config_file)
         assert result == {}
@@ -161,7 +161,7 @@ class TestLoadConfigFromPyproject:
 [project]
 name = "myproject"
 
-[tool.mkd2typst]
+[tool.md2typst]
 parser = "marko"
 plugins = ["gfm"]
 """)
@@ -199,21 +199,21 @@ class TestLoadConfig:
     def test_pyproject_config(self, tmp_path):
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("""
-[tool.mkd2typst]
+[tool.md2typst]
 parser = "marko"
 """)
         config = load_config(start_dir=tmp_path)
         assert config.parser == "marko"
 
-    def test_mkd2typst_toml_overrides_pyproject(self, tmp_path):
+    def test_md2typst_toml_overrides_pyproject(self, tmp_path):
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("""
-[tool.mkd2typst]
+[tool.md2typst]
 parser = "marko"
 plugins = ["a"]
 """)
 
-        config_file = tmp_path / ".mkd2typst.toml"
+        config_file = tmp_path / ".md2typst.toml"
         config_file.write_text("""
 parser = "mistune"
 """)
@@ -226,11 +226,11 @@ parser = "mistune"
     def test_cli_overrides_all(self, tmp_path):
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("""
-[tool.mkd2typst]
+[tool.md2typst]
 parser = "marko"
 """)
 
-        config_file = tmp_path / ".mkd2typst.toml"
+        config_file = tmp_path / ".md2typst.toml"
         config_file.write_text("""
 parser = "mistune"
 """)
@@ -259,7 +259,7 @@ parser = "mistune"
     def test_cli_none_values_ignored(self, tmp_path):
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("""
-[tool.mkd2typst]
+[tool.md2typst]
 parser = "marko"
 """)
 
@@ -279,12 +279,12 @@ parser = "marko"
     def test_parser_options_merge(self, tmp_path):
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("""
-[tool.mkd2typst.parser_options]
+[tool.md2typst.parser_options]
 html = true
 linkify = false
 """)
 
-        config_file = tmp_path / ".mkd2typst.toml"
+        config_file = tmp_path / ".md2typst.toml"
         config_file.write_text("""
 [parser_options]
 linkify = true
@@ -303,14 +303,14 @@ class TestConfigIntegration:
     """Integration tests for config with the converter."""
 
     def test_convert_with_config(self):
-        from mkd2typst import convert_with_config
+        from md2typst import convert_with_config
 
         config = Config(parser="mistune")
         result = convert_with_config("# Hello", config)
         assert "= Hello" in result
 
     def test_convert_with_different_parsers(self):
-        from mkd2typst import convert_with_config
+        from md2typst import convert_with_config
 
         md = "**bold** and *italic*"
 

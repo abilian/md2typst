@@ -1,1 +1,1 @@
-"""Tests for mkd2typst."""
+"""Tests for md2typst."""

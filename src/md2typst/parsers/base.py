@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from mkd2typst.ast import Document
+    from md2typst.ast import Document
 
 
 class MarkdownParser(ABC):

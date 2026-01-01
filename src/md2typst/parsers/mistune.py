@@ -10,7 +10,7 @@ from typing import Any
 
 import mistune
 
-from mkd2typst.ast import (
+from md2typst.ast import (
     BlockQuote,
     Code,
     CodeBlock,
@@ -84,7 +84,7 @@ class MistuneParser(MarkdownParser):
     def _convert_document(self, tokens: list[dict]) -> Document:
         """Convert top-level tokens to Document."""
         children = self._convert_blocks(tokens)
-        return Document(children=children)
+        return Document(children=tuple(children))
 
     def _convert_blocks(self, tokens: list[dict]) -> list[Node]:
         """Convert a list of block tokens to AST nodes."""
@@ -103,12 +103,12 @@ class MistuneParser(MarkdownParser):
 
         if token_type == "paragraph":
             children = self._convert_inline(token.get("children", []))
-            return Paragraph(children=children)
+            return Paragraph(children=tuple(children))
 
         if token_type == "heading":
             level = token.get("attrs", {}).get("level", 1)
             children = self._convert_inline(token.get("children", []))
-            return Heading(level=level, children=children)
+            return Heading(level=level, children=tuple(children))
 
         if token_type in ("code_block", "block_code"):
             info = token.get("attrs", {}).get("info")
@@ -117,7 +117,7 @@ class MistuneParser(MarkdownParser):
 
         if token_type == "block_quote":
             children = self._convert_blocks(token.get("children", []))
-            return BlockQuote(children=children)
+            return BlockQuote(children=tuple(children))
 
         if token_type == "list":
             ordered = token.get("attrs", {}).get("ordered", False)
@@ -126,8 +126,10 @@ class MistuneParser(MarkdownParser):
             for child in token.get("children", []):
                 if child.get("type") == "list_item":
                     item_children = self._convert_blocks(child.get("children", []))
-                    items.append(ListItem(children=item_children))
-            return List(ordered=ordered, items=items, start=start if ordered else None)
+                    items.append(ListItem(children=tuple(item_children)))
+            return List(
+                ordered=ordered, items=tuple(items), start=start if ordered else None
+            )
 
         if token_type == "thematic_break":
             return ThematicBreak()
@@ -138,7 +140,7 @@ class MistuneParser(MarkdownParser):
         if token_type == "block_text":
             # Block text is typically inside list items
             children = self._convert_inline(token.get("children", []))
-            return Paragraph(children=children)
+            return Paragraph(children=tuple(children))
 
         if token_type == "table":
             return self._convert_table(token)
@@ -162,7 +164,7 @@ class MistuneParser(MarkdownParser):
                         align = attrs.get("align")
                         alignments.append(align)
                         cell_children = self._convert_inline(cell.get("children", []))
-                        header.append(TableCell(children=cell_children))
+                        header.append(TableCell(children=tuple(cell_children)))
 
             elif child_type == "table_body":
                 # Process body rows
@@ -174,10 +176,16 @@ class MistuneParser(MarkdownParser):
                                 cell_children = self._convert_inline(
                                     cell.get("children", [])
                                 )
-                                row_cells.append(TableCell(children=cell_children))
+                                row_cells.append(
+                                    TableCell(children=tuple(cell_children))
+                                )
                         rows.append(row_cells)
 
-        return Table(header=header, rows=rows, alignments=alignments)
+        return Table(
+            header=tuple(header),
+            rows=tuple(tuple(r) for r in rows),
+            alignments=tuple(alignments),
+        )
 
     def _convert_inline(self, tokens: list[dict]) -> list[Node]:
         """Convert inline tokens to AST nodes."""
@@ -208,22 +216,22 @@ class MistuneParser(MarkdownParser):
 
         if token_type == "emphasis":
             children = self._convert_inline(token.get("children", []))
-            return Emphasis(children=children)
+            return Emphasis(children=tuple(children))
 
         if token_type == "strong":
             children = self._convert_inline(token.get("children", []))
-            return Strong(children=children)
+            return Strong(children=tuple(children))
 
         if token_type == "strikethrough":
             children = self._convert_inline(token.get("children", []))
-            return Strikethrough(children=children)
+            return Strikethrough(children=tuple(children))
 
         if token_type == "link":
             attrs = token.get("attrs", {})
             url = attrs.get("url", "")
             title = attrs.get("title")
             children = self._convert_inline(token.get("children", []))
-            return Link(url=url, children=children, title=title)
+            return Link(url=url, children=tuple(children), title=title)
 
         if token_type == "image":
             attrs = token.get("attrs", {})

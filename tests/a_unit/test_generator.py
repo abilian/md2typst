@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mkd2typst.ast import (
+from md2typst.ast import (
     BlockQuote,
     Code,
     CodeBlock,
@@ -23,7 +23,7 @@ from mkd2typst.ast import (
     Text,
     ThematicBreak,
 )
-from mkd2typst.generator import escape_typst, generate_typst
+from md2typst.generator import escape_typst, generate_typst
 
 pytestmark = pytest.mark.unit
 

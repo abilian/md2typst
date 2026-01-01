@@ -1,9 +1,9 @@
-"""Configuration management for mkd2typst.
+"""Configuration management for md2typst.
 
 This module handles loading and merging configuration from multiple sources:
 1. Default values
-2. pyproject.toml [tool.mkd2typst] section
-3. .mkd2typst.toml file
+2. pyproject.toml [tool.md2typst] section
+3. .md2typst.toml file
 4. CLI arguments (highest priority)
 """
 
@@ -18,7 +18,7 @@ import tomllib
 
 @dataclass
 class Config:
-    """Runtime configuration for mkd2typst.
+    """Runtime configuration for md2typst.
 
     Attributes:
         parser: Name of the Markdown parser to use.
@@ -56,7 +56,7 @@ class Config:
 
 
 def find_config_file(start_dir: Path | None = None) -> Path | None:
-    """Find .mkd2typst.toml by searching up from start_dir.
+    """Find .md2typst.toml by searching up from start_dir.
 
     Args:
         start_dir: Directory to start searching from. Defaults to cwd.
@@ -70,7 +70,7 @@ def find_config_file(start_dir: Path | None = None) -> Path | None:
     current = start_dir.resolve()
 
     while True:
-        config_path = current / ".mkd2typst.toml"
+        config_path = current / ".md2typst.toml"
         if config_path.is_file():
             return config_path
 
@@ -129,7 +129,7 @@ def load_toml_file(path: Path) -> dict[str, Any]:
 
 
 def load_config_from_file(path: Path) -> dict[str, Any]:
-    """Load mkd2typst config from a .mkd2typst.toml file.
+    """Load md2typst config from a .md2typst.toml file.
 
     Args:
         path: Path to the config file.
@@ -141,7 +141,7 @@ def load_config_from_file(path: Path) -> dict[str, Any]:
 
 
 def load_config_from_pyproject(path: Path) -> dict[str, Any]:
-    """Load mkd2typst config from pyproject.toml [tool.mkd2typst] section.
+    """Load md2typst config from pyproject.toml [tool.md2typst] section.
 
     Args:
         path: Path to pyproject.toml.
@@ -150,7 +150,7 @@ def load_config_from_pyproject(path: Path) -> dict[str, Any]:
         Configuration dictionary, empty if section not found.
     """
     data = load_toml_file(path)
-    return data.get("tool", {}).get("mkd2typst", {})
+    return data.get("tool", {}).get("md2typst", {})
 
 
 def load_config(
@@ -163,8 +163,8 @@ def load_config(
     Precedence (highest to lowest):
     1. CLI arguments (cli_overrides)
     2. Explicit config file (config_file)
-    3. .mkd2typst.toml (found by searching up)
-    4. pyproject.toml [tool.mkd2typst] (found by searching up)
+    3. .md2typst.toml (found by searching up)
+    4. pyproject.toml [tool.md2typst] (found by searching up)
     5. Default values
 
     Args:
@@ -184,7 +184,7 @@ def load_config(
         if pyproject_config:
             config = config.merge(pyproject_config)
 
-    # Load from .mkd2typst.toml (higher priority)
+    # Load from .md2typst.toml (higher priority)
     if config_file is None:
         config_file = find_config_file(start_dir)
 

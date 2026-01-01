@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from mkd2typst import convert
-from mkd2typst.ast import (
+from md2typst import convert
+from md2typst.ast import (
     Document,
     Paragraph,
     Strikethrough,
@@ -14,8 +14,8 @@ from mkd2typst.ast import (
     TableCell,
     Text,
 )
-from mkd2typst.generator import generate_typst
-from mkd2typst.parsers import get_parser
+from md2typst.generator import generate_typst
+from md2typst.parsers import get_parser
 
 pytestmark = pytest.mark.integration
 

@@ -12,8 +12,8 @@ from string import ascii_letters, digits
 import pytest
 from hypothesis import assume, given, settings, strategies as st
 
-from mkd2typst import convert
-from mkd2typst.ast import (
+from md2typst import convert
+from md2typst.ast import (
     Code,
     CodeBlock,
     Document,
@@ -24,7 +24,7 @@ from mkd2typst.ast import (
     Strong,
     Text,
 )
-from mkd2typst.generator import generate_typst
+from md2typst.generator import generate_typst
 
 pytestmark = pytest.mark.integration
 

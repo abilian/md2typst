@@ -1,6 +1,6 @@
 [project]
-name = "mkd2typst"
-version = "0.1.0"
+name = "md2typst"
+version = "0.5.0"
 description = "Markdown to Typst converter with multiple parser support"
 readme = "README.md"
 authors = [
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mkd2typst = "mkd2typst:main"
+md2typst = "md2typst:main"
 
 [dependency-groups]
 dev = [

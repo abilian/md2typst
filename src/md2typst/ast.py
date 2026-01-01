@@ -1,4 +1,4 @@
-"""AST node definitions for mkd2typst.
+"""AST node definitions for md2typst.
 
 This module defines a parser-agnostic AST that serves as the intermediate
 representation between Markdown parsing and Typst code generation.
@@ -6,10 +6,10 @@ representation between Markdown parsing and Typst code generation.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(frozen=True)
 class Node:
     """Base AST node."""
 
@@ -22,38 +22,38 @@ class Node:
 # =============================================================================
 
 
-@dataclass
+@dataclass(frozen=True)
 class Document(Node):
     """Root node containing all block elements."""
 
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
 
     def __str__(self) -> str:
         return f"Document({len(self.children)} children)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Paragraph(Node):
     """A paragraph containing inline elements."""
 
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
 
     def __str__(self) -> str:
         return f"Paragraph({len(self.children)} children)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Heading(Node):
     """A heading with level 1-6."""
 
     level: int
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
 
     def __str__(self) -> str:
         return f"Heading(level={self.level}, {len(self.children)} children)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class CodeBlock(Node):
     """A fenced or indented code block."""
 
@@ -66,22 +66,22 @@ class CodeBlock(Node):
         return f"CodeBlock(lang={lang}, {lines} lines)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class BlockQuote(Node):
     """A block quote containing other block elements."""
 
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
 
     def __str__(self) -> str:
         return f"BlockQuote({len(self.children)} children)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class List(Node):
     """An ordered or unordered list."""
 
     ordered: bool
-    items: list[ListItem] = field(default_factory=list)
+    items: tuple[ListItem, ...] = ()
     start: int | None = None  # Starting number for ordered lists
 
     def __str__(self) -> str:
@@ -89,17 +89,17 @@ class List(Node):
         return f"List({kind}, {len(self.items)} items)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ListItem(Node):
     """A single item in a list."""
 
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
 
     def __str__(self) -> str:
         return f"ListItem({len(self.children)} children)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ThematicBreak(Node):
     """A horizontal rule / thematic break."""
 
@@ -107,25 +107,23 @@ class ThematicBreak(Node):
         return "ThematicBreak()"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Table(Node):
     """A table with header and body rows."""
 
-    header: list[TableCell] = field(default_factory=list)
-    rows: list[list[TableCell]] = field(default_factory=list)
-    alignments: list[str | None] = field(
-        default_factory=list
-    )  # 'left', 'right', 'center', None
+    header: tuple[TableCell, ...] = ()
+    rows: tuple[tuple[TableCell, ...], ...] = ()
+    alignments: tuple[str | None, ...] = ()  # 'left', 'right', 'center', None
 
     def __str__(self) -> str:
         return f"Table({len(self.header)} cols, {len(self.rows)} rows)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class TableCell(Node):
     """A single cell in a table."""
 
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
 
     def __str__(self) -> str:
         return f"TableCell({len(self.children)} children)"
@@ -136,7 +134,7 @@ class TableCell(Node):
 # =============================================================================
 
 
-@dataclass
+@dataclass(frozen=True)
 class Text(Node):
     """Plain text content."""
 
@@ -147,37 +145,37 @@ class Text(Node):
         return f"Text({preview!r})"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Emphasis(Node):
     """Emphasized (italic) text."""
 
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
 
     def __str__(self) -> str:
         return f"Emphasis({len(self.children)} children)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Strong(Node):
     """Strong (bold) text."""
 
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
 
     def __str__(self) -> str:
         return f"Strong({len(self.children)} children)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Strikethrough(Node):
     """Strikethrough text (GFM extension)."""
 
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
 
     def __str__(self) -> str:
         return f"Strikethrough({len(self.children)} children)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Code(Node):
     """Inline code span."""
 
@@ -188,19 +186,19 @@ class Code(Node):
         return f"Code({preview!r})"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Link(Node):
     """A hyperlink."""
 
     url: str
-    children: list[Node] = field(default_factory=list)
+    children: tuple[Node, ...] = ()
     title: str | None = None
 
     def __str__(self) -> str:
         return f"Link(url={self.url!r})"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Image(Node):
     """An image."""
 
@@ -212,7 +210,7 @@ class Image(Node):
         return f"Image(url={self.url!r})"
 
 
-@dataclass
+@dataclass(frozen=True)
 class SoftBreak(Node):
     """A soft line break (typically rendered as space)."""
 
@@ -220,7 +218,7 @@ class SoftBreak(Node):
         return "SoftBreak()"
 
 
-@dataclass
+@dataclass(frozen=True)
 class HardBreak(Node):
     """A hard line break."""
 
@@ -228,7 +226,7 @@ class HardBreak(Node):
         return "HardBreak()"
 
 
-@dataclass
+@dataclass(frozen=True)
 class HtmlBlock(Node):
     """Raw HTML block (preserved but may not render in Typst)."""
 
@@ -239,7 +237,7 @@ class HtmlBlock(Node):
         return f"HtmlBlock({lines} lines)"
 
 
-@dataclass
+@dataclass(frozen=True)
 class HtmlInline(Node):
     """Inline HTML (preserved but may not render in Typst)."""
 

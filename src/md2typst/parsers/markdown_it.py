@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from markdown_it import MarkdownIt
 
-from mkd2typst.ast import (
+from md2typst.ast import (
     BlockQuote,
     Code,
     CodeBlock,
@@ -113,7 +113,7 @@ class MarkdownItParser(MarkdownParser):
     def _convert_document(self, tokens: list[Token]) -> Document:
         """Convert top-level tokens to Document."""
         children = self._convert_blocks(tokens)
-        return Document(children=children)
+        return Document(children=tuple(children))
 
     def _convert_blocks(self, tokens: list[Token]) -> list[Node]:
         """Convert a list of block tokens to AST nodes."""
@@ -130,7 +130,7 @@ class MarkdownItParser(MarkdownParser):
                 i += 1  # Skip paragraph_close
                 i += 1
                 children = self._convert_inline(inline_token.children or [])
-                nodes.append(Paragraph(children=children))
+                nodes.append(Paragraph(children=tuple(children)))
 
             elif token.type == "heading_open":
                 level = int(token.tag[1])  # h1 -> 1, h2 -> 2, etc.
@@ -139,7 +139,7 @@ class MarkdownItParser(MarkdownParser):
                 i += 1  # Skip heading_close
                 i += 1
                 children = self._convert_inline(inline_token.children or [])
-                nodes.append(Heading(level=level, children=children))
+                nodes.append(Heading(level=level, children=tuple(children)))
 
             elif token.type == "fence":
                 lang = token.info.strip() if token.info else None
@@ -164,7 +164,7 @@ class MarkdownItParser(MarkdownParser):
                         inner_tokens.append(tokens[i])
                     i += 1
                 children = self._convert_blocks(inner_tokens)
-                nodes.append(BlockQuote(children=children))
+                nodes.append(BlockQuote(children=tuple(children)))
 
             elif token.type == "bullet_list_open":
                 i, list_node = self._convert_list(tokens, i, ordered=False)
@@ -231,7 +231,7 @@ class MarkdownItParser(MarkdownParser):
                                     children = self._convert_inline(
                                         tokens[i].children or []
                                     )
-                                    header.append(TableCell(children=children))
+                                    header.append(TableCell(children=tuple(children)))
                                     i += 1
                                 else:
                                     header.append(TableCell(children=[]))
@@ -260,7 +260,7 @@ class MarkdownItParser(MarkdownParser):
                                     children = self._convert_inline(
                                         tokens[i].children or []
                                     )
-                                    row.append(TableCell(children=children))
+                                    row.append(TableCell(children=tuple(children)))
                                     i += 1
                                 else:
                                     row.append(TableCell(children=[]))
@@ -279,7 +279,11 @@ class MarkdownItParser(MarkdownParser):
                 i += 1
 
         i += 1  # Skip table_close
-        return i, Table(header=header, rows=rows, alignments=alignments)
+        return i, Table(
+            header=tuple(header),
+            rows=tuple(tuple(r) for r in rows),
+            alignments=tuple(alignments),
+        )
 
     def _convert_list(
         self,
@@ -311,12 +315,14 @@ class MarkdownItParser(MarkdownParser):
                         inner_tokens.append(tokens[i])
                     i += 1
                 children = self._convert_blocks(inner_tokens)
-                items.append(ListItem(children=children))
+                items.append(ListItem(children=tuple(children)))
             else:
                 i += 1
 
         i += 1  # Skip list_close
-        return i, List(ordered=ordered, items=items, start=start if ordered else None)
+        return i, List(
+            ordered=ordered, items=tuple(items), start=start if ordered else None
+        )
 
     def _convert_inline(self, tokens: list[Token]) -> list[Node]:
         """Convert inline tokens to AST nodes."""
@@ -345,17 +351,17 @@ class MarkdownItParser(MarkdownParser):
             elif token.type == "em_open":
                 i += 1
                 children, i = self._collect_until(tokens, i, "em_close")
-                nodes.append(Emphasis(children=children))
+                nodes.append(Emphasis(children=tuple(children)))
 
             elif token.type == "strong_open":
                 i += 1
                 children, i = self._collect_until(tokens, i, "strong_close")
-                nodes.append(Strong(children=children))
+                nodes.append(Strong(children=tuple(children)))
 
             elif token.type == "s_open":
                 i += 1
                 children, i = self._collect_until(tokens, i, "s_close")
-                nodes.append(Strikethrough(children=children))
+                nodes.append(Strikethrough(children=tuple(children)))
 
             elif token.type == "link_open":
                 href = str(token.attrGet("href") or "")
@@ -363,7 +369,7 @@ class MarkdownItParser(MarkdownParser):
                 title = str(title_attr) if title_attr is not None else None
                 i += 1
                 children, i = self._collect_until(tokens, i, "link_close")
-                nodes.append(Link(url=href, children=children, title=title))
+                nodes.append(Link(url=href, children=tuple(children), title=title))
 
             elif token.type == "image":
                 src = str(token.attrGet("src") or "")
