@@ -65,3 +65,13 @@ lint.extend-ignore = [
 combine-as-imports = true
 required-imports = ["from __future__ import annotations"]
 known-first-party = ["mkd2typst"]
+
+[lint.per-file-ignores]
+"tests/**" = [
+    "ANN001",  # missing-type-function-argument
+    "ANN201",  # missing-return-type-undocumented-public-function
+    "ANN202",  # missing-return-type-private-function
+    "RET504",  # unnecessary-assign
+    "E741",    # ambiguous-variable-name
+    "BLE001",  # blind-except (acceptable in robustness tests)
+]

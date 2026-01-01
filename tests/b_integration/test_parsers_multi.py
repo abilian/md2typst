@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import pytest
 
-pytestmark = pytest.mark.integration
-
 from mkd2typst.ast import (
     BlockQuote,
     Code,
@@ -26,6 +24,8 @@ from mkd2typst.ast import (
     ThematicBreak,
 )
 from mkd2typst.parsers import get_parser, list_parsers
+
+pytestmark = pytest.mark.integration
 
 # All available parsers for parametrized tests
 ALL_PARSERS = ["markdown-it", "mistune", "marko"]

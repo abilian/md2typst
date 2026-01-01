@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-pytestmark = pytest.mark.integration
-
 from mkd2typst.ast import (
     BlockQuote,
     Code,
@@ -23,6 +21,8 @@ from mkd2typst.ast import (
 )
 from mkd2typst.parsers import get_parser, list_parsers
 from mkd2typst.parsers.markdown_it import MarkdownItParser
+
+pytestmark = pytest.mark.integration
 
 
 class TestParserRegistry:
@@ -79,8 +79,10 @@ class TestMarkdownItParser:
         doc = parser.parse("# Heading 1\n\n## Heading 2")
         assert len(doc.children) == 2
         h1, h2 = doc.children
-        assert isinstance(h1, Heading) and h1.level == 1
-        assert isinstance(h2, Heading) and h2.level == 2
+        assert isinstance(h1, Heading)
+        assert h1.level == 1
+        assert isinstance(h2, Heading)
+        assert h2.level == 2
 
     def test_emphasis(self, parser):
         doc = parser.parse("This is *emphasized* text.")

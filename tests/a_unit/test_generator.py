@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-pytestmark = pytest.mark.unit
-
 from mkd2typst.ast import (
     BlockQuote,
     Code,
@@ -26,6 +24,8 @@ from mkd2typst.ast import (
     ThematicBreak,
 )
 from mkd2typst.generator import escape_typst, generate_typst
+
+pytestmark = pytest.mark.unit
 
 
 class TestEscaping:
@@ -89,7 +89,7 @@ class TestHeadings:
     """Test heading generation."""
 
     @pytest.mark.parametrize(
-        "level,prefix",
+        ("level", "prefix"),
         [
             (1, "= "),
             (2, "== "),

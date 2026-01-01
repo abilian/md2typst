@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-pytestmark = pytest.mark.integration
-
 from mkd2typst import convert
 from mkd2typst.ast import (
     Document,
@@ -18,6 +16,8 @@ from mkd2typst.ast import (
 )
 from mkd2typst.generator import generate_typst
 from mkd2typst.parsers import get_parser
+
+pytestmark = pytest.mark.integration
 
 # All available parsers for parametrized tests
 ALL_PARSERS = ["markdown-it", "mistune", "marko"]

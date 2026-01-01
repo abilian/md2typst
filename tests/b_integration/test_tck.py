@@ -12,9 +12,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-pytestmark = pytest.mark.integration
-
 from mkd2typst import convert
+
+pytestmark = pytest.mark.integration
 
 # Test fixture directories
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
@@ -536,12 +536,12 @@ class TestRegressionSuite:
             l for l in lines if l.strip().startswith("[") and "table.header" not in l
         ]
         assert len(data_lines) == 2
-        assert (
-            "[A]" in data_lines[0] and "[B]" in data_lines[0] and "[C]" in data_lines[0]
-        )
-        assert (
-            "[D]" in data_lines[1] and "[E]" in data_lines[1] and "[F]" in data_lines[1]
-        )
+        assert "[A]" in data_lines[0]
+        assert "[B]" in data_lines[0]
+        assert "[C]" in data_lines[0]
+        assert "[D]" in data_lines[1]
+        assert "[E]" in data_lines[1]
+        assert "[F]" in data_lines[1]
 
     @pytest.mark.parametrize("parser_name", ALL_PARSERS)
     def test_consecutive_code_blocks(self, parser_name: str):

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-pytestmark = pytest.mark.e2e
-
 from mkd2typst import convert
+
+pytestmark = pytest.mark.e2e
 
 
 class TestConvert:

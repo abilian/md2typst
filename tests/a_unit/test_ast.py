@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-pytestmark = pytest.mark.unit
-
 from mkd2typst.ast import (
     BlockQuote,
     Code,
@@ -24,6 +22,8 @@ from mkd2typst.ast import (
     Text,
     ThematicBreak,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestNodeStr:

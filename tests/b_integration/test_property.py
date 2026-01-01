@@ -12,8 +12,6 @@ from string import ascii_letters, digits
 import pytest
 from hypothesis import assume, given, settings, strategies as st
 
-pytestmark = pytest.mark.integration
-
 from mkd2typst import convert
 from mkd2typst.ast import (
     Code,
@@ -27,6 +25,8 @@ from mkd2typst.ast import (
     Text,
 )
 from mkd2typst.generator import generate_typst
+
+pytestmark = pytest.mark.integration
 
 # All available parsers
 ALL_PARSERS = ["markdown-it", "mistune", "marko"]

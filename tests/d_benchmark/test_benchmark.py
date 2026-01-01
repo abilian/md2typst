@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import pytest
 
-pytestmark = pytest.mark.benchmark
-
 from mkd2typst import convert
 from mkd2typst.parsers import get_parser
+
+pytestmark = pytest.mark.benchmark
 
 # Sample documents of varying sizes
 SMALL_DOC = """# Hello
@@ -173,7 +173,7 @@ class TestThroughput:
         def run():
             return convert(doc, parser=parser_name)
 
-        result = benchmark(run)
+        _result = benchmark(run)
         # Note: benchmark will measure iterations/sec automatically
 
     def test_throughput_10k(self, benchmark, parser_name):

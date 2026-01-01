@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-pytestmark = pytest.mark.integration
-
 from mkd2typst.config import (
     Config,
     find_config_file,
@@ -14,6 +12,8 @@ from mkd2typst.config import (
     load_config_from_file,
     load_config_from_pyproject,
 )
+
+pytestmark = pytest.mark.integration
 
 
 class TestConfig:
