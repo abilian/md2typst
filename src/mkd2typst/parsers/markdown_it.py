@@ -6,10 +6,9 @@ converting its token stream to our AST representation.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from markdown_it import MarkdownIt
-from markdown_it.token import Token
 
 from mkd2typst.ast import (
     BlockQuote,
@@ -37,6 +36,9 @@ from mkd2typst.ast import (
 )
 
 from .base import MarkdownParser
+
+if TYPE_CHECKING:
+    from markdown_it.token import Token
 
 
 class MarkdownItParser(MarkdownParser):
@@ -100,7 +102,8 @@ class MarkdownItParser(MarkdownParser):
                     plugin_func = getattr(module, attr_name)
                     self._md.use(plugin_func, **kwargs)
                     return
-            raise ValueError(f"Could not find plugin function in {plugin}")
+            msg = f"Could not find plugin function in {plugin}"
+            raise ValueError(msg)
 
     def parse(self, text: str) -> Document:
         """Parse Markdown text into AST."""

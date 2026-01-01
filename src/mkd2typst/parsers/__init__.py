@@ -39,7 +39,8 @@ def get_parser(name: str | None = None) -> MarkdownParser:
 
     if name not in _PARSERS:
         available = ", ".join(sorted(set(_PARSERS.keys())))
-        raise ValueError(f"Unknown parser: {name!r}. Available: {available}")
+        msg = f"Unknown parser: {name!r}. Available: {available}"
+        raise ValueError(msg)
 
     module_path = _PARSERS[name]
 

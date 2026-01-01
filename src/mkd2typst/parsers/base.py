@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from mkd2typst.ast import Document
+if TYPE_CHECKING:
+    from mkd2typst.ast import Document
 
 
 class MarkdownParser(ABC):
@@ -47,7 +48,8 @@ class MarkdownParser(ABC):
         The default implementation raises NotImplementedError.
         Subclasses should override this method if they support plugins.
         """
-        raise NotImplementedError(f"{self.__class__.__name__} does not support plugins")
+        msg = f"{self.__class__.__name__} does not support plugins"
+        raise NotImplementedError(msg)
 
     @property
     @abstractmethod

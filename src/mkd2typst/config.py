@@ -137,8 +137,7 @@ def load_config_from_file(path: Path) -> dict[str, Any]:
     Returns:
         Configuration dictionary.
     """
-    data = load_toml_file(path)
-    return data
+    return load_toml_file(path)
 
 
 def load_config_from_pyproject(path: Path) -> dict[str, Any]:
