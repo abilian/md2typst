@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from mkd2typst.ast import Document
 from mkd2typst.config import Config, load_config
@@ -49,10 +50,8 @@ def convert(
 
     if plugins:
         for plugin in plugins:
-            try:
+            with contextlib.suppress(NotImplementedError):
                 p.load_plugin(plugin)
-            except NotImplementedError:
-                pass  # Parser doesn't support plugins
 
     doc = p.parse(markdown)
     return generate_typst(doc)
@@ -156,13 +155,13 @@ def main() -> None:
         elif input == "-":
             text = sys.stdin.read()
         else:
-            with open(input) as f:
+            with Path(input).open() as f:
                 text = f.read()
 
         result = convert_with_config(text, config)
 
         if output:
-            with open(output, "w") as f:
+            with Path(output).open("w") as f:
                 f.write(result)
         else:
             click.echo(result)

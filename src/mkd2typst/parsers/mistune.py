@@ -35,10 +35,10 @@ from mkd2typst.ast import (
     ThematicBreak,
 )
 
+from .base import MarkdownParser
+
 # Default GFM plugins to enable
 GFM_PLUGINS = ["strikethrough", "table"]
-
-from .base import MarkdownParser
 
 
 class MistuneParser(MarkdownParser):
@@ -77,6 +77,8 @@ class MistuneParser(MarkdownParser):
     def parse(self, text: str) -> Document:
         """Parse Markdown text into AST."""
         tokens = self._md(text)
+        if not isinstance(tokens, list):
+            return Document(children=[])
         return self._convert_document(tokens)
 
     def _convert_document(self, tokens: list[dict]) -> Document:
@@ -231,11 +233,11 @@ class MistuneParser(MarkdownParser):
             if not alt:
                 # Extract alt text from children
                 children = token.get("children", [])
-                alt_parts = []
-                for child in children:
-                    if child.get("type") == "text":
-                        alt_parts.append(child.get("raw", ""))
-                alt = "".join(alt_parts)
+                alt = "".join(
+                    child.get("raw", "")
+                    for child in children
+                    if child.get("type") == "text"
+                )
             title = attrs.get("title")
             return Image(url=url, alt=alt, title=title)
 

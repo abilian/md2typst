@@ -124,7 +124,7 @@ def load_toml_file(path: Path) -> dict[str, Any]:
         FileNotFoundError: If the file doesn't exist.
         tomllib.TOMLDecodeError: If the file is not valid TOML.
     """
-    with open(path, "rb") as f:
+    with path.open("rb") as f:
         return tomllib.load(f)
 
 

@@ -216,7 +216,7 @@ class MarkdownItParser(MarkdownParser):
                         while i < len(tokens) and tokens[i].type != "tr_close":
                             if tokens[i].type == "th_open":
                                 # Get alignment from style attribute
-                                style = tokens[i].attrGet("style") or ""
+                                style = str(tokens[i].attrGet("style") or "")
                                 if "text-align:left" in style:
                                     alignments.append("left")
                                 elif "text-align:right" in style:
@@ -358,16 +358,18 @@ class MarkdownItParser(MarkdownParser):
                 nodes.append(Strikethrough(children=children))
 
             elif token.type == "link_open":
-                href = token.attrGet("href") or ""
-                title = token.attrGet("title")
+                href = str(token.attrGet("href") or "")
+                title_attr = token.attrGet("title")
+                title = str(title_attr) if title_attr is not None else None
                 i += 1
                 children, i = self._collect_until(tokens, i, "link_close")
                 nodes.append(Link(url=href, children=children, title=title))
 
             elif token.type == "image":
-                src = token.attrGet("src") or ""
+                src = str(token.attrGet("src") or "")
                 alt = token.content or ""
-                title = token.attrGet("title")
+                title_attr = token.attrGet("title")
+                title = str(title_attr) if title_attr is not None else None
                 nodes.append(Image(url=src, alt=alt, title=title))
                 i += 1
 

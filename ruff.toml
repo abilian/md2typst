@@ -25,6 +25,10 @@ lint.extend-ignore = [
     "S105",
     "T201",
     "ISC001",
+    # Acceptable in this codebase
+    "C901",   # complex-structure (parser functions are inherently complex)
+    "ANN401", # any-type (needed for external library types)
+    "B027",   # empty-method-without-abstract-decorator (intentional default impl)
     # # This breaks SQLAlchemy models
     # "TC001", #  	[ ] typing-only-first-party-import
     # "TC002", #  	[ ] typing-only-third-party-import

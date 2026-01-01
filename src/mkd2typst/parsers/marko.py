@@ -76,7 +76,7 @@ class MarkoParser(MarkdownParser):
 
     def _convert_document(self, doc: marko_block.Document) -> Document:
         """Convert marko Document to our Document."""
-        children = self._convert_children(doc.children)
+        children = self._convert_children(list(doc.children))
         return Document(children=children)
 
     def _convert_children(self, children: list) -> list[Node]:
