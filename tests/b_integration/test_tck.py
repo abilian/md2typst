@@ -15,7 +15,6 @@ import yaml
 pytestmark = pytest.mark.integration
 
 from mkd2typst import convert
-from mkd2typst.parsers import get_parser
 
 # Test fixture directories
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
@@ -290,8 +289,7 @@ class TestSemanticEquivalence:
 
         # Extract semantic content from each
         semantic_contents = {
-            name: extract_semantic_content(result)
-            for name, result in results.items()
+            name: extract_semantic_content(result) for name, result in results.items()
         }
 
         # All parsers should extract the same semantic content
@@ -355,9 +353,7 @@ class TestCommonMarkFixtures:
 
     @pytest.mark.parametrize("fixture_name", get_commonmark_fixture_names())
     @pytest.mark.parametrize("parser_name", ALL_PARSERS)
-    def test_fixture_converts_without_error(
-        self, fixture_name: str, parser_name: str
-    ):
+    def test_fixture_converts_without_error(self, fixture_name: str, parser_name: str):
         """Verify each fixture converts without errors."""
         md_file = COMMONMARK_DIR / f"{fixture_name}.md"
         md_content = md_file.read_text()
@@ -401,9 +397,7 @@ class TestGFMFixtures:
 
     @pytest.mark.parametrize("fixture_name", get_gfm_fixture_names())
     @pytest.mark.parametrize("parser_name", ALL_PARSERS)
-    def test_fixture_converts_without_error(
-        self, fixture_name: str, parser_name: str
-    ):
+    def test_fixture_converts_without_error(self, fixture_name: str, parser_name: str):
         """Verify each GFM fixture converts without errors."""
         md_file = GFM_DIR / f"{fixture_name}.md"
         md_content = md_file.read_text()
@@ -427,7 +421,9 @@ class TestGFMFixtures:
 
         # For GFM features, check key markers are present
         if "strikethrough" in fixture_name:
-            assert "#strike[" in result, f"Missing strikethrough in {parser_name} output"
+            assert (
+                "#strike[" in result
+            ), f"Missing strikethrough in {parser_name} output"
 
         if "table" in fixture_name:
             assert "#table(" in result, f"Missing table in {parser_name} output"
@@ -494,7 +490,7 @@ class TestRegressionSuite:
 
     @pytest.mark.parametrize("parser_name", ALL_PARSERS)
     def test_deeply_nested_list(self, parser_name: str):
-        """Test deeply nested list handling."""
+        """Test deeply nested list handling with proper indentation."""
         md = """- Level 1
   - Level 2
     - Level 3"""
@@ -503,6 +499,12 @@ class TestRegressionSuite:
         assert "Level 1" in result
         assert "Level 2" in result
         assert "Level 3" in result
+
+        # Verify indentation is preserved
+        lines = result.strip().split("\n")
+        assert lines[0].startswith("- ")  # Level 1 not indented
+        assert lines[1].startswith("  - ")  # Level 2 indented 2 spaces
+        assert lines[2].startswith("    - ")  # Level 3 indented 4 spaces
 
     @pytest.mark.parametrize("parser_name", ALL_PARSERS)
     def test_table_with_empty_cells(self, parser_name: str):
@@ -514,6 +516,32 @@ class TestRegressionSuite:
 
         assert "#table(" in result
         assert "X" in result
+
+    @pytest.mark.parametrize("parser_name", ALL_PARSERS)
+    def test_table_header_format(self, parser_name: str):
+        """Test that table headers are in a single table.header() call."""
+        md = """| Col1 | Col2 | Col3 |
+|------|------|------|
+| A    | B    | C    |
+| D    | E    | F    |"""
+        result = convert(md, parser=parser_name)
+
+        # Headers should be in ONE table.header() call, not separate calls
+        assert "table.header([Col1], [Col2], [Col3])" in result
+
+        # Each row should have all cells on the same line
+        lines = result.strip().split("\n")
+        # Find data rows (not header, not table declaration, not closing)
+        data_lines = [
+            l for l in lines if l.strip().startswith("[") and "table.header" not in l
+        ]
+        assert len(data_lines) == 2
+        assert (
+            "[A]" in data_lines[0] and "[B]" in data_lines[0] and "[C]" in data_lines[0]
+        )
+        assert (
+            "[D]" in data_lines[1] and "[E]" in data_lines[1] and "[F]" in data_lines[1]
+        )
 
     @pytest.mark.parametrize("parser_name", ALL_PARSERS)
     def test_consecutive_code_blocks(self, parser_name: str):

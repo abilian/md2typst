@@ -193,9 +193,7 @@ class MarkdownItParser(MarkdownParser):
 
         return nodes
 
-    def _convert_table(
-        self, tokens: list[Token], start_idx: int
-    ) -> tuple[int, Table]:
+    def _convert_table(self, tokens: list[Token], start_idx: int) -> tuple[int, Table]:
         """Convert table tokens to Table node."""
         header: list[TableCell] = []
         rows: list[list[TableCell]] = []

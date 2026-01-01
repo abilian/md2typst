@@ -10,8 +10,7 @@ import re
 from string import ascii_letters, digits
 
 import pytest
-from hypothesis import given, settings, assume
-from hypothesis import strategies as st
+from hypothesis import assume, given, settings, strategies as st
 
 pytestmark = pytest.mark.integration
 
@@ -156,9 +155,7 @@ class TestGeneratorProperties:
     @given(st.integers(min_value=1, max_value=6), safe_text())
     def test_heading_level_mapping(self, level: int, text: str):
         """Heading level should map to correct number of '=' signs."""
-        doc = Document(
-            children=[Heading(level=level, children=[Text(content=text)])]
-        )
+        doc = Document(children=[Heading(level=level, children=[Text(content=text)])])
         result = generate_typst(doc)
 
         expected = "=" * level
@@ -215,9 +212,7 @@ class TestGeneratorProperties:
         url = f"https://{domain}.example.com"
         doc = Document(
             children=[
-                Paragraph(
-                    children=[Link(url=url, children=[Text(content=text)])]
-                )
+                Paragraph(children=[Link(url=url, children=[Text(content=text)])])
             ]
         )
         result = generate_typst(doc)

@@ -19,7 +19,6 @@ from mkd2typst.ast import (
 from mkd2typst.generator import generate_typst
 from mkd2typst.parsers import get_parser
 
-
 # All available parsers for parametrized tests
 ALL_PARSERS = ["markdown-it", "mistune", "marko"]
 
@@ -60,9 +59,7 @@ class TestStrikethrough:
         """Test that strikethrough generates correct Typst."""
         doc = Document(
             children=[
-                Paragraph(
-                    children=[Strikethrough(children=[Text(content="deleted")])]
-                )
+                Paragraph(children=[Strikethrough(children=[Text(content="deleted")])])
             ]
         )
         result = generate_typst(doc)
@@ -174,6 +171,8 @@ class TestTables:
         assert "Header 2" in result
         assert "Cell 1" in result
         assert "Cell 2" in result
+        # Verify correct table.header format (all headers in one call)
+        assert "table.header([Header 1], [Header 2])" in result
 
     def test_table_generation_with_alignment(self):
         """Test table generation with column alignment."""

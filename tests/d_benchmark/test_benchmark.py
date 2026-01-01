@@ -153,9 +153,7 @@ class TestSpecificOperations:
 
     def test_links(self, benchmark, parser_name):
         """Benchmark link parsing."""
-        doc = "\n".join(
-            [f"[Link {i}](https://example.com/{i})" for i in range(100)]
-        )
+        doc = "\n".join([f"[Link {i}](https://example.com/{i})" for i in range(100)])
         benchmark(convert, doc, parser=parser_name)
 
 

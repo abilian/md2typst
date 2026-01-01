@@ -3,6 +3,8 @@
 This module converts the parser-agnostic AST to Typst source code.
 """
 
+# ruff: noqa: N802
+
 from __future__ import annotations
 
 import re
@@ -145,8 +147,12 @@ class TypstGenerator:
         for i, child in enumerate(node.children):
             result = self.visit(child)
             if result:
-                # For nested blocks after the first, indent them
-                if i > 0 and not isinstance(child, (List,)):
+                # Nested lists need to be indented
+                if isinstance(child, List):
+                    # Indent each line of the nested list
+                    result = "  " + result.replace("\n", "\n  ")
+                elif i > 0:
+                    # For other nested blocks after the first, indent them
                     result = "  " + result.replace("\n", "\n  ")
                 parts.append(result)
 
@@ -183,16 +189,21 @@ class TypstGenerator:
 
         lines = [f"#table(columns: ({columns}),"]
 
-        # Header cells
+        # Header row - all cells in a single table.header() call
+        header_cells = []
         for cell in node.header:
             cell_content = self._visit_children_inline(cell.children)
-            lines.append(f"  table.header([{cell_content}]),")
+            header_cells.append(f"[{cell_content}]")
+        if header_cells:
+            lines.append(f"  table.header({', '.join(header_cells)}),")
 
         # Body rows
         for row in node.rows:
+            row_cells = []
             for cell in row:
                 cell_content = self._visit_children_inline(cell.children)
-                lines.append(f"  [{cell_content}],")
+                row_cells.append(f"[{cell_content}]")
+            lines.append(f"  {', '.join(row_cells)},")
 
         lines.append(")")
         return "\n".join(lines)

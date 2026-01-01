@@ -23,50 +23,45 @@ lint.extend-ignore = [
     "SIM108", # 	[ ] if-else-block-instead-of-if-exp
     "S101",
     "S105",
-    # This breaks SQLAlchemy models
-    "TC001", #  	[ ] typing-only-first-party-import
-    "TC002", #  	[ ] typing-only-third-party-import
-    "TC003", #  	[ ] typing-only-third-party-import
-    # Fix these
-    "BLE001", # 	[ ] blind-except
-    "FIX002", # 	[ ] line-contains-todo
-    "RUF012", # 	[ ] mutable-class-default
-    "ANN001", # 	[ ] missing-type-function-argument
-    "ANN201", # 	[ ] missing-return-type-undocumented-public-function
-    "B904", #   	[ ] raise-without-from-inside-except
-    "B008", #   	[ ] function-call-in-default-argument
-    "C901", #   	[ ] complex-structure
-    "PLW0603", #	[ ] global-statement
-    "ANN003", # 	[ ] missing-type-kwargs
-    "RET504", # 	[ ] unnecessary-assign
-    "SIM105", # 	[ ] suppressible-exception
-    "F841", #   	[ ] unused-variable
-    "S110", #   	[ ] try-except-pass
-    "SIM102", # 	[ ] collapsible-if
-    "SLF001", # 	[ ] private-member-access
-    "ANN202", # 	[ ] missing-return-type-private-function
-    "PERF401", #	[ ] manual-list-comprehension
-    "PGH003", # 	[ ] blanket-type-ignore
-    "RUF005", # 	[ ] collection-literal-concatenation
-    "S324", #   	[ ] hashlib-insecure-hash-function
-    "S603", #   	[ ] subprocess-without-shell-equals-true
-    "PLC0415", #	[ ] import-outside-top-level
-    "RUF006", # 	[ ] asyncio-dangling-task
-    "S104", #   	[ ] hardcoded-bind-all-interfaces
-    "S112", #   	[ ] try-except-continue
-    "S314", #   	[ ] suspicious-xml-element-tree-usage
-    "S607", #   	[ ] start-process-with-partial-path
-    "SIM118", # 	[ ] in-dict-keys
-]
-
-extend-exclude = [
-    "packages/pyxeo-ui/",
-    "packages/pyxeo-streamlit/",
-    "packages/pyxeo-nicegui/",
-    "packages/pyxeo-ai/",
+    "T201",
+    "ISC001",
+    # # This breaks SQLAlchemy models
+    # "TC001", #  	[ ] typing-only-first-party-import
+    # "TC002", #  	[ ] typing-only-third-party-import
+    # "TC003", #  	[ ] typing-only-third-party-import
+    # # Fix these
+    # "BLE001", # 	[ ] blind-except
+    # "FIX002", # 	[ ] line-contains-todo
+    # "RUF012", # 	[ ] mutable-class-default
+    # "ANN001", # 	[ ] missing-type-function-argument
+    # "ANN201", # 	[ ] missing-return-type-undocumented-public-function
+    # "B904", #   	[ ] raise-without-from-inside-except
+    # "B008", #   	[ ] function-call-in-default-argument
+    # "C901", #   	[ ] complex-structure
+    # "PLW0603", #	[ ] global-statement
+    # "ANN003", # 	[ ] missing-type-kwargs
+    # "RET504", # 	[ ] unnecessary-assign
+    # "SIM105", # 	[ ] suppressible-exception
+    # "F841", #   	[ ] unused-variable
+    # "S110", #   	[ ] try-except-pass
+    # "SIM102", # 	[ ] collapsible-if
+    # "SLF001", # 	[ ] private-member-access
+    # "ANN202", # 	[ ] missing-return-type-private-function
+    # "PERF401", #	[ ] manual-list-comprehension
+    # "PGH003", # 	[ ] blanket-type-ignore
+    # "RUF005", # 	[ ] collection-literal-concatenation
+    # "S324", #   	[ ] hashlib-insecure-hash-function
+    # "S603", #   	[ ] subprocess-without-shell-equals-true
+    # "PLC0415", #	[ ] import-outside-top-level
+    # "RUF006", # 	[ ] asyncio-dangling-task
+    # "S104", #   	[ ] hardcoded-bind-all-interfaces
+    # "S112", #   	[ ] try-except-continue
+    # "S314", #   	[ ] suspicious-xml-element-tree-usage
+    # "S607", #   	[ ] start-process-with-partial-path
+    # "SIM118", # 	[ ] in-dict-keys
 ]
 
 [lint.isort]
 combine-as-imports = true
 required-imports = ["from __future__ import annotations"]
-known-first-party = ["pyxeo"]
+known-first-party = ["mkd2typst"]
