@@ -31,6 +31,7 @@ def convert(
     parser: str | None = None,
     parser_options: dict[str, Any] | None = None,
     plugins: list[str] | None = None,
+    output_options: dict[str, Any] | None = None,
 ) -> str:
     """Convert Markdown text to Typst.
 
@@ -39,6 +40,7 @@ def convert(
         parser: Optional parser name. Uses default if not specified.
         parser_options: Optional parser-specific options.
         plugins: Optional list of parser plugins to load.
+        output_options: Optional output generation options (e.g., note_style).
 
     Returns:
         The generated Typst source code.
@@ -54,7 +56,10 @@ def convert(
                 p.load_plugin(plugin)
 
     doc = p.parse(markdown)
-    return generate_typst(doc)
+
+    # Extract generator options
+    note_style = (output_options or {}).get("note_style", "footnote")
+    return generate_typst(doc, note_style=note_style)
 
 
 def convert_with_config(markdown: str, config: Config) -> str:
@@ -67,12 +72,21 @@ def convert_with_config(markdown: str, config: Config) -> str:
     Returns:
         The generated Typst source code.
     """
-    return convert(
-        markdown,
-        parser=config.parser,
-        parser_options=config.parser_options,
-        plugins=config.plugins,
-    )
+    p = get_parser(config.parser)
+
+    if config.parser_options:
+        p.configure(config.parser_options)
+
+    if config.plugins:
+        for plugin in config.plugins:
+            with contextlib.suppress(NotImplementedError):
+                p.load_plugin(plugin)
+
+    doc = p.parse(markdown)
+
+    # Extract generator options
+    note_style = config.output_options.get("note_style", "footnote")
+    return generate_typst(doc, note_style=note_style)
 
 
 def main() -> None:

@@ -19,14 +19,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - mistune: `footnotes` (built-in)
     - marko: `footnote` (built-in)
 
-- Added `mdit-py-plugins` as a dev dependency for footnote support in markdown-it-py
+- **Endnotes support**: Alternative to footnotes that collects notes at end of document
+  - Configure via `output_options.note_style = "endnote"` in config file
+  - Or via API: `generate_typst(doc, note_style="endnote")`
+  - Produces superscript references (`#super[1]`) and a "Notes" section with numbered list
+  - Repeated references to the same note use the same number
 
-- New integration tests for footnote parsing and generation (`tests/b_integration/test_footnotes.py`)
+- **Index entries support**: Mark terms for inclusion in a document index (markdown-it only)
+  - New AST node: `IndexEntry(term, subterm, see)`
+  - Pandoc-style syntax: `[Python]{.index}` or `[text]{.index key="Term!Subterm"}`
+  - Generator produces Typst `#index("term")` or `#index("term", "subterm")`
+  - Requires `mdit_py_plugins.attrs` plugin with markdown-it parser
+
+- Added `mdit-py-plugins` as a dev dependency for footnote and index entry support
+
+- New integration tests:
+  - `tests/b_integration/test_footnotes.py` - footnote parsing and generation
+  - `tests/b_integration/test_index.py` - index entry parsing and generation
 
 ### Changed
 
 - AST dataclasses are now frozen (`@dataclass(frozen=True)`) with tuple fields for immutability
 - Updated `_visit_children_inline` to accept `tuple[Node, ...]` instead of `list[Node]`
+- `convert()` function now accepts `output_options` parameter for generator configuration
+- `convert_with_config()` now passes `output_options` from config to the generator
 
 ### Fixed
 

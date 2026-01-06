@@ -23,6 +23,7 @@ from md2typst.ast import (
     HtmlBlock,
     HtmlInline,
     Image,
+    IndexEntry,
     Link,
     List,
     ListItem,
@@ -87,10 +88,21 @@ class MarkdownItParser(MarkdownParser):
         Args:
             plugin: Plugin module path (e.g., 'mdit_py_plugins.footnote')
             **kwargs: Plugin-specific options
+
+        Special handling for certain plugins:
+            - 'mdit_py_plugins.attrs': Enables spans=True by default for index entries
         """
         import importlib
 
         module = importlib.import_module(plugin)
+
+        # Special handling for attrs plugin to enable span parsing
+        if plugin == "mdit_py_plugins.attrs":
+            # Enable spans by default for index entry support
+            if "spans" not in kwargs:
+                kwargs["spans"] = True
+            self._md.use(module.attrs_plugin, **kwargs)
+            return
 
         # Most plugins have a _plugin attribute or are callable
         if hasattr(module, "footnote_plugin"):
@@ -429,6 +441,38 @@ class MarkdownItParser(MarkdownParser):
                 label = str(meta.get("label", meta.get("id", "")))
                 nodes.append(FootnoteRef(label=label))
                 i += 1
+
+            elif token.type == "span_open":
+                # Check if this is an index entry (has .index class)
+                attrs = token.attrs or {}
+                css_class = str(attrs.get("class", ""))
+                if css_class == "index":
+                    i += 1
+                    # Collect text content until span_close
+                    text_content = ""
+                    while i < len(tokens) and tokens[i].type != "span_close":
+                        if tokens[i].type == "text":
+                            text_content += tokens[i].content
+                        i += 1
+                    i += 1  # Skip span_close
+
+                    # Parse key attribute for hierarchical entries
+                    key = str(attrs.get("key", ""))
+                    if key and "!" in key:
+                        # Format: "term!subterm"
+                        parts = key.split("!", 1)
+                        nodes.append(IndexEntry(term=parts[0], subterm=parts[1]))
+                    elif key:
+                        # Just a term override
+                        nodes.append(IndexEntry(term=key))
+                    else:
+                        # Use the span text as the term
+                        nodes.append(IndexEntry(term=text_content))
+                else:
+                    # Regular span - just process children as normal
+                    i += 1
+                    children, i = self._collect_until(tokens, i, "span_close")
+                    nodes.extend(children)
 
             else:
                 # Skip unknown inline tokens

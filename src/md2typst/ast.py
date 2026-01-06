@@ -284,3 +284,30 @@ class FootnoteRef(Node):
 
     def __str__(self) -> str:
         return f"FootnoteRef(label={self.label!r})"
+
+
+@dataclass(frozen=True)
+class IndexEntry(Node):
+    """An index entry marker for document indexing.
+
+    Marks a term for inclusion in a document index. The term appears in the
+    text and is also registered for the index. Supports hierarchical entries
+    with main terms and subterms.
+
+    Example Markdown (Pandoc-style):
+        The [Python]{.index} programming language...
+        [functions]{.index key="Programming!Functions"}
+
+    Example Typst output:
+        #index("Python")Python
+        #index("Programming", "Functions")functions
+    """
+
+    term: str  # Primary index term
+    subterm: str | None = None  # Optional subterm for hierarchical entries
+    see: str | None = None  # Cross-reference ("see also X")
+
+    def __str__(self) -> str:
+        if self.subterm:
+            return f"IndexEntry(term={self.term!r}, subterm={self.subterm!r})"
+        return f"IndexEntry(term={self.term!r})"

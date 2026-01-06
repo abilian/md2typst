@@ -26,6 +26,7 @@ from .ast import (
     HtmlBlock,
     HtmlInline,
     Image,
+    IndexEntry,
     Link,
     List,
     ListItem,
@@ -55,17 +56,31 @@ def escape_typst_string(text: str) -> str:
 class TypstGenerator:
     """Generates Typst code from AST."""
 
-    def __init__(self) -> None:
+    def __init__(self, note_style: str = "footnote") -> None:
+        """Initialize the generator.
+
+        Args:
+            note_style: How to render footnotes. Options:
+                - "footnote": Inline footnotes using Typst's #footnote[]
+                - "endnote": Superscript numbers with notes collected at end
+        """
         self._indent_level = 0
         self._in_list = False
         self._footnotes: dict[str, FootnoteDef] = {}
+        self._note_style = note_style
+        # Track endnote references in order for numbering
+        self._endnote_refs: list[str] = []
 
     def generate(self, doc: Document) -> str:
         """Convert a Document AST to Typst source code.
 
         First collects all footnote definitions, then generates output.
-        Footnote references are resolved inline using Typst's #footnote[].
+        For footnote style: references are resolved inline using #footnote[].
+        For endnote style: references become superscripts, notes at end.
         """
+        # Reset endnote tracking for each generation
+        self._endnote_refs = []
+
         # First pass: collect all footnote definitions
         self._collect_footnotes(doc)
 
@@ -75,7 +90,35 @@ class TypstGenerator:
             result = self.visit(child)
             if result:
                 parts.append(result)
-        return "\n\n".join(parts)
+
+        result = "\n\n".join(parts)
+
+        # For endnote style, append the notes section
+        if self._note_style == "endnote" and self._endnote_refs:
+            endnotes_section = self._generate_endnotes_section()
+            if endnotes_section:
+                result = result + "\n\n" + endnotes_section
+
+        return result
+
+    def _generate_endnotes_section(self) -> str:
+        """Generate the endnotes section for endnote style."""
+        if not self._endnote_refs:
+            return ""
+
+        lines = ["= Notes", ""]
+        for _i, label in enumerate(self._endnote_refs, 1):
+            footnote_def = self._footnotes.get(label)
+            if footnote_def:
+                content_parts: list[str] = []
+                for child in footnote_def.children:
+                    result = self.visit(child)
+                    if result:
+                        content_parts.append(result)
+                content = " ".join(content_parts) if content_parts else ""
+                lines.append(f"+ {content}")
+
+        return "\n".join(lines)
 
     def _collect_footnotes(self, node: Node) -> None:
         """Recursively collect all FootnoteDef nodes."""
@@ -366,8 +409,13 @@ class TypstGenerator:
     def visit_FootnoteRef(self, node: FootnoteRef) -> str:
         """Convert footnote reference to Typst.
 
-        Markdown: [^label]
-        Typst: #footnote[content]
+        For footnote style:
+            Markdown: [^label]
+            Typst: #footnote[content]
+
+        For endnote style:
+            Markdown: [^label]
+            Typst: #super[N] (where N is the note number)
 
         Looks up the footnote definition by label and inlines its content.
         If the footnote is not found, emits the original reference as text.
@@ -377,7 +425,14 @@ class TypstGenerator:
             # Unresolved reference - emit as escaped text
             return escape_typst(f"[^{node.label}]")
 
-        # Generate footnote content from the definition's children
+        if self._note_style == "endnote":
+            # Track this reference for endnote numbering
+            if node.label not in self._endnote_refs:
+                self._endnote_refs.append(node.label)
+            note_number = self._endnote_refs.index(node.label) + 1
+            return f"#super[{note_number}]"
+
+        # Default: footnote style - inline the content
         content_parts: list[str] = []
         for child in footnote_def.children:
             result = self.visit(child)
@@ -393,8 +448,30 @@ class TypstGenerator:
 
         return f"#footnote[{content}]"
 
+    def visit_IndexEntry(self, node: IndexEntry) -> str:
+        """Convert index entry to Typst.
 
-def generate_typst(doc: Document) -> str:
-    """Convenience function to generate Typst from a Document."""
-    generator = TypstGenerator()
+        Markdown: [term]{.index} or [text]{.index key="term!subterm"}
+        Typst: #index("term")term or #index("term", "subterm")text
+
+        The index marker is invisible but registers the term in the index.
+        The term text is displayed in the document.
+        """
+        term = escape_typst_string(node.term)
+
+        if node.subterm:
+            subterm = escape_typst_string(node.subterm)
+            return f'#index("{term}", "{subterm}")'
+
+        return f'#index("{term}")'
+
+
+def generate_typst(doc: Document, note_style: str = "footnote") -> str:
+    """Convenience function to generate Typst from a Document.
+
+    Args:
+        doc: The Document AST to convert.
+        note_style: How to render footnotes ("footnote" or "endnote").
+    """
+    generator = TypstGenerator(note_style=note_style)
     return generator.generate(doc)

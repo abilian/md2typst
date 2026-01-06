@@ -319,3 +319,41 @@ class TestConfigIntegration:
             result = convert_with_config(md, config)
             assert "*bold*" in result
             assert "_italic_" in result
+
+    def test_convert_with_endnote_style(self):
+        """Test that note_style output option is respected."""
+        from md2typst import convert_with_config
+
+        # Markdown with footnote
+        md = """Text with footnote[^1].
+
+[^1]: The footnote content.
+"""
+        # Default footnote style
+        config_footnote = Config(
+            parser="markdown-it",
+            plugins=["mdit_py_plugins.footnote"],
+        )
+        result_footnote = convert_with_config(md, config_footnote)
+        assert "#footnote[" in result_footnote
+        assert "#super[" not in result_footnote
+
+        # Endnote style via output_options
+        config_endnote = Config(
+            parser="markdown-it",
+            plugins=["mdit_py_plugins.footnote"],
+            output_options={"note_style": "endnote"},
+        )
+        result_endnote = convert_with_config(md, config_endnote)
+        assert "#super[1]" in result_endnote
+        assert "= Notes" in result_endnote
+
+    def test_output_options_from_toml(self, tmp_path):
+        """Test that output_options are loaded from config file."""
+        config_file = tmp_path / ".md2typst.toml"
+        config_file.write_text("""
+[output_options]
+note_style = "endnote"
+""")
+        result = load_config_from_file(config_file)
+        assert result["output_options"]["note_style"] == "endnote"

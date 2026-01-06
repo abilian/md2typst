@@ -15,6 +15,7 @@ from md2typst.ast import (
     HardBreak,
     Heading,
     Image,
+    IndexEntry,
     Link,
     List,
     ListItem,
@@ -542,3 +543,201 @@ class TestFootnotes:
         assert "#footnote[The note.]" in result
         # FootnoteDef should not appear in output directly
         assert result.count("The note.") == 1
+
+
+class TestEndnotes:
+    """Test endnote generation (alternative to footnotes)."""
+
+    def test_simple_endnote(self):
+        """Test a simple endnote with reference and definition."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Some text"),
+                        FootnoteRef(label="1"),
+                        Text(content="."),
+                    )
+                ),
+                FootnoteDef(
+                    label="1",
+                    children=(Paragraph(children=(Text(content="The endnote."),)),),
+                ),
+            )
+        )
+        result = generate_typst(doc, note_style="endnote")
+        # Should have superscript reference
+        assert "#super[1]" in result
+        # Should have Notes section at end
+        assert "= Notes" in result
+        assert "+ The endnote." in result
+
+    def test_multiple_endnotes(self):
+        """Test document with multiple endnotes."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="First"),
+                        FootnoteRef(label="a"),
+                        Text(content=" and second"),
+                        FootnoteRef(label="b"),
+                        Text(content="."),
+                    )
+                ),
+                FootnoteDef(
+                    label="a",
+                    children=(Paragraph(children=(Text(content="Note A."),)),),
+                ),
+                FootnoteDef(
+                    label="b",
+                    children=(Paragraph(children=(Text(content="Note B."),)),),
+                ),
+            )
+        )
+        result = generate_typst(doc, note_style="endnote")
+        # Should have numbered superscripts
+        assert "#super[1]" in result
+        assert "#super[2]" in result
+        # Notes should appear in order
+        assert "= Notes" in result
+        lines = result.split("\n")
+        notes_start = next(i for i, line in enumerate(lines) if "= Notes" in line)
+        notes_section = "\n".join(lines[notes_start:])
+        assert "+ Note A." in notes_section
+        assert "+ Note B." in notes_section
+
+    def test_repeated_endnote_ref(self):
+        """Test that repeated references to same note use same number."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="First ref"),
+                        FootnoteRef(label="x"),
+                        Text(content=" and again"),
+                        FootnoteRef(label="x"),
+                        Text(content="."),
+                    )
+                ),
+                FootnoteDef(
+                    label="x",
+                    children=(Paragraph(children=(Text(content="The note."),)),),
+                ),
+            )
+        )
+        result = generate_typst(doc, note_style="endnote")
+        # Both refs should have the same number
+        assert result.count("#super[1]") == 2
+        # Only one note in the Notes section
+        assert result.count("+ The note.") == 1
+
+    def test_no_endnotes_no_section(self):
+        """Test that documents without notes don't have a Notes section."""
+        doc = Document(children=(Paragraph(children=(Text(content="Just text."),)),))
+        result = generate_typst(doc, note_style="endnote")
+        assert "= Notes" not in result
+
+    def test_footnote_style_default(self):
+        """Test that footnote style is the default."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Text"),
+                        FootnoteRef(label="1"),
+                    )
+                ),
+                FootnoteDef(
+                    label="1",
+                    children=(Paragraph(children=(Text(content="Note."),)),),
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        # Default should be footnote style
+        assert "#footnote[Note.]" in result
+        assert "#super[" not in result
+
+
+class TestIndexEntries:
+    """Test index entry generation."""
+
+    def test_simple_index_entry(self):
+        """Test a simple index entry with just a term."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="The "),
+                        IndexEntry(term="Python"),
+                        Text(content=" programming language."),
+                    )
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert '#index("Python")' in result
+        assert "The " in result
+        assert " programming language." in result
+
+    def test_index_entry_with_subterm(self):
+        """Test index entry with main term and subterm."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        IndexEntry(term="Programming", subterm="Functions"),
+                        Text(content="Functions are reusable code blocks."),
+                    )
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert '#index("Programming", "Functions")' in result
+
+    def test_multiple_index_entries(self):
+        """Test document with multiple index entries."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Learn about "),
+                        IndexEntry(term="Python"),
+                        Text(content=" and "),
+                        IndexEntry(term="JavaScript"),
+                        Text(content="."),
+                    )
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert '#index("Python")' in result
+        assert '#index("JavaScript")' in result
+
+    def test_index_entry_special_chars(self):
+        """Test index entry with special characters in term."""
+        doc = Document(
+            children=(Paragraph(children=(IndexEntry(term='C++ "Templates"'),)),)
+        )
+        result = generate_typst(doc)
+        # Quotes should be escaped in the Typst string
+        assert '#index("C++ \\"Templates\\"")' in result
+
+    def test_index_entry_in_heading(self):
+        """Test index entry within a heading."""
+        doc = Document(
+            children=(
+                Heading(
+                    level=2,
+                    children=(
+                        IndexEntry(term="Introduction"),
+                        Text(content="Introduction"),
+                    ),
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert result.startswith("== ")
+        assert '#index("Introduction")' in result
+        assert "Introduction" in result

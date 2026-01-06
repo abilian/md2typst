@@ -15,6 +15,7 @@ from md2typst.ast import (
     HardBreak,
     Heading,
     Image,
+    IndexEntry,
     Link,
     List,
     ListItem,
@@ -62,6 +63,15 @@ class TestNodeStr:
     def test_image_str(self):
         img = Image(url="image.png", alt="An image")
         assert "image.png" in str(img)
+
+    def test_index_entry_str(self):
+        entry = IndexEntry(term="Python")
+        assert "Python" in str(entry)
+
+    def test_index_entry_with_subterm_str(self):
+        entry = IndexEntry(term="Programming", subterm="Functions")
+        assert "Programming" in str(entry)
+        assert "Functions" in str(entry)
 
 
 class TestNodeConstruction:
@@ -187,3 +197,19 @@ class TestNodeConstruction:
         footnote = doc.children[1]
         assert isinstance(footnote, FootnoteDef)
         assert footnote.label == "1"
+
+    def test_index_entry(self):
+        entry = IndexEntry(term="Python")
+        assert entry.term == "Python"
+        assert entry.subterm is None
+        assert entry.see is None
+
+    def test_index_entry_with_subterm(self):
+        entry = IndexEntry(term="Programming", subterm="Functions")
+        assert entry.term == "Programming"
+        assert entry.subterm == "Functions"
+
+    def test_index_entry_with_see(self):
+        entry = IndexEntry(term="Algorithms", see="Data Structures")
+        assert entry.term == "Algorithms"
+        assert entry.see == "Data Structures"
