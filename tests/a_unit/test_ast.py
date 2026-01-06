@@ -10,6 +10,8 @@ from md2typst.ast import (
     CodeBlock,
     Document,
     Emphasis,
+    FootnoteDef,
+    FootnoteRef,
     HardBreak,
     Heading,
     Image,
@@ -126,3 +128,62 @@ class TestNodeConstruction:
     def test_inline_code(self):
         code = Code(content="x = 1")
         assert code.content == "x = 1"
+
+    def test_footnote_ref(self):
+        ref = FootnoteRef(label="1")
+        assert ref.label == "1"
+        assert "1" in str(ref)
+
+    def test_footnote_ref_with_named_label(self):
+        ref = FootnoteRef(label="note")
+        assert ref.label == "note"
+        assert "note" in str(ref)
+
+    def test_footnote_def(self):
+        footnote = FootnoteDef(
+            label="1",
+            children=(Paragraph(children=(Text(content="Footnote content"),)),),
+        )
+        assert footnote.label == "1"
+        assert len(footnote.children) == 1
+        assert "1" in str(footnote)
+        assert "1 children" in str(footnote)
+
+    def test_footnote_def_multi_block(self):
+        """Footnotes can contain multiple block elements."""
+        footnote = FootnoteDef(
+            label="complex",
+            children=(
+                Paragraph(children=(Text(content="First paragraph."),)),
+                Paragraph(children=(Text(content="Second paragraph."),)),
+            ),
+        )
+        assert footnote.label == "complex"
+        assert len(footnote.children) == 2
+
+    def test_document_with_footnotes(self):
+        """Document can contain both footnote refs and defs."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Text with footnote"),
+                        FootnoteRef(label="1"),
+                        Text(content="."),
+                    )
+                ),
+                FootnoteDef(
+                    label="1",
+                    children=(Paragraph(children=(Text(content="The footnote."),)),),
+                ),
+            )
+        )
+        assert len(doc.children) == 2
+        # Check the paragraph contains the footnote ref
+        para = doc.children[0]
+        assert isinstance(para, Paragraph)
+        assert isinstance(para.children[1], FootnoteRef)
+        # Check the footnote def
+        footnote = doc.children[1]
+        assert isinstance(footnote, FootnoteDef)
+        assert footnote.label == "1"

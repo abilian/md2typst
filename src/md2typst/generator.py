@@ -19,6 +19,8 @@ from .ast import (
     CodeBlock,
     Document,
     Emphasis,
+    FootnoteDef,
+    FootnoteRef,
     HardBreak,
     Heading,
     HtmlBlock,
@@ -56,15 +58,32 @@ class TypstGenerator:
     def __init__(self) -> None:
         self._indent_level = 0
         self._in_list = False
+        self._footnotes: dict[str, FootnoteDef] = {}
 
     def generate(self, doc: Document) -> str:
-        """Convert a Document AST to Typst source code."""
+        """Convert a Document AST to Typst source code.
+
+        First collects all footnote definitions, then generates output.
+        Footnote references are resolved inline using Typst's #footnote[].
+        """
+        # First pass: collect all footnote definitions
+        self._collect_footnotes(doc)
+
+        # Second pass: generate output (FootnoteDefs produce no output)
         parts: list[str] = []
         for child in doc.children:
             result = self.visit(child)
             if result:
                 parts.append(result)
         return "\n\n".join(parts)
+
+    def _collect_footnotes(self, node: Node) -> None:
+        """Recursively collect all FootnoteDef nodes."""
+        if isinstance(node, FootnoteDef):
+            self._footnotes[node.label] = node
+        elif isinstance(node, Document):
+            for child in node.children:
+                self._collect_footnotes(child)
 
     def visit(self, node: Node) -> str:
         """Dispatch to the appropriate visitor method."""
@@ -213,6 +232,16 @@ class TypstGenerator:
         escaped = node.content.replace("*/", "* /")
         return f"/* HTML block:\n{escaped}\n*/"
 
+    def visit_FootnoteDef(self, node: FootnoteDef) -> str:
+        """Footnote definitions produce no direct output.
+
+        The content is inlined at the FootnoteRef location using Typst's
+        #footnote[] function. The definition is collected in the first pass
+        and used when visiting FootnoteRef nodes.
+        """
+        # Footnote defs are consumed by refs, no direct output
+        return ""
+
     # =========================================================================
     # Inline visitors
     # =========================================================================
@@ -333,6 +362,36 @@ class TypstGenerator:
             return f"/* {content} */"
 
         return escape_typst(content)
+
+    def visit_FootnoteRef(self, node: FootnoteRef) -> str:
+        """Convert footnote reference to Typst.
+
+        Markdown: [^label]
+        Typst: #footnote[content]
+
+        Looks up the footnote definition by label and inlines its content.
+        If the footnote is not found, emits the original reference as text.
+        """
+        footnote_def = self._footnotes.get(node.label)
+        if footnote_def is None:
+            # Unresolved reference - emit as escaped text
+            return escape_typst(f"[^{node.label}]")
+
+        # Generate footnote content from the definition's children
+        content_parts: list[str] = []
+        for child in footnote_def.children:
+            result = self.visit(child)
+            if result:
+                content_parts.append(result)
+
+        # Join content - for simple footnotes it's a single paragraph,
+        # for complex ones we join with double newlines
+        if len(content_parts) == 1:
+            content = content_parts[0]
+        else:
+            content = "\n\n".join(content_parts)
+
+        return f"#footnote[{content}]"
 
 
 def generate_typst(doc: Document) -> str:

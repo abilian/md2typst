@@ -20,6 +20,8 @@ from md2typst.ast import (
     CodeBlock,
     Document,
     Emphasis,
+    FootnoteDef,
+    FootnoteRef,
     HardBreak,
     Heading,
     HtmlBlock,
@@ -145,6 +147,12 @@ class MarkoParser(MarkdownParser):
         if element_type == "Table":
             return self._convert_table(element)
 
+        # Handle Footnote elements (from footnote extension)
+        if element_type == "FootnoteDef":
+            label = getattr(element, "key", "")
+            children = self._convert_children(element.children)
+            return FootnoteDef(label=label, children=tuple(children))
+
         # Handle any inline elements at block level
         if hasattr(element, "children"):
             children = self._convert_inline_children(element.children)
@@ -226,6 +234,11 @@ class MarkoParser(MarkdownParser):
         if element_type == "Strikethrough":
             children = self._convert_inline_children(element.children)
             return Strikethrough(children=tuple(children))
+
+        # Handle Footnote reference (from footnote extension)
+        if element_type == "FootnoteRef":
+            label = getattr(element, "key", "")
+            return FootnoteRef(label=label)
 
         if isinstance(element, marko_inline.Link):
             url = element.dest or ""

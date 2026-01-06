@@ -10,6 +10,8 @@ from md2typst.ast import (
     CodeBlock,
     Document,
     Emphasis,
+    FootnoteDef,
+    FootnoteRef,
     HardBreak,
     Heading,
     Image,
@@ -386,3 +388,157 @@ class TestIntegration:
         assert "*bold*" in result
         assert "_italic_" in result
         assert "```python" in result
+
+
+class TestFootnotes:
+    """Test footnote generation."""
+
+    def test_simple_footnote(self):
+        """Test a simple footnote with reference and definition."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Some text"),
+                        FootnoteRef(label="1"),
+                        Text(content="."),
+                    )
+                ),
+                FootnoteDef(
+                    label="1",
+                    children=(Paragraph(children=(Text(content="The footnote."),)),),
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert "Some text" in result
+        assert "#footnote[The footnote.]" in result
+        assert result.endswith(".")
+
+    def test_footnote_with_formatting(self):
+        """Test footnote content with inline formatting."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Text"),
+                        FootnoteRef(label="note"),
+                    )
+                ),
+                FootnoteDef(
+                    label="note",
+                    children=(
+                        Paragraph(
+                            children=(
+                                Text(content="A "),
+                                Strong(children=(Text(content="bold"),)),
+                                Text(content=" footnote."),
+                            )
+                        ),
+                    ),
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert "#footnote[A *bold* footnote.]" in result
+
+    def test_multi_paragraph_footnote(self):
+        """Test footnote with multiple paragraphs."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Text"),
+                        FootnoteRef(label="1"),
+                    )
+                ),
+                FootnoteDef(
+                    label="1",
+                    children=(
+                        Paragraph(children=(Text(content="First paragraph."),)),
+                        Paragraph(children=(Text(content="Second paragraph."),)),
+                    ),
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert "#footnote[First paragraph." in result
+        assert "Second paragraph.]" in result
+
+    def test_multiple_footnotes(self):
+        """Test document with multiple footnotes."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="First"),
+                        FootnoteRef(label="1"),
+                        Text(content=" and second"),
+                        FootnoteRef(label="2"),
+                        Text(content="."),
+                    )
+                ),
+                FootnoteDef(
+                    label="1",
+                    children=(Paragraph(children=(Text(content="Note one."),)),),
+                ),
+                FootnoteDef(
+                    label="2",
+                    children=(Paragraph(children=(Text(content="Note two."),)),),
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert "#footnote[Note one.]" in result
+        assert "#footnote[Note two.]" in result
+
+    def test_unresolved_footnote_ref(self):
+        """Test that unresolved footnote refs are preserved as text."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Text with missing ref"),
+                        FootnoteRef(label="missing"),
+                        Text(content="."),
+                    )
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        # Should escape brackets (special chars) but not ^ (not special in Typst)
+        assert r"\[^missing\]" in result
+
+    def test_footnote_def_produces_no_output(self):
+        """Test that FootnoteDef alone produces no output."""
+        doc = Document(
+            children=(
+                FootnoteDef(
+                    label="unused",
+                    children=(Paragraph(children=(Text(content="Unused note."),)),),
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert result == ""
+
+    def test_footnote_def_before_ref(self):
+        """Test that definition can appear before reference in document."""
+        doc = Document(
+            children=(
+                FootnoteDef(
+                    label="1",
+                    children=(Paragraph(children=(Text(content="The note."),)),),
+                ),
+                Paragraph(
+                    children=(
+                        Text(content="Text"),
+                        FootnoteRef(label="1"),
+                    )
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert "#footnote[The note.]" in result
+        # FootnoteDef should not appear in output directly
+        assert result.count("The note.") == 1

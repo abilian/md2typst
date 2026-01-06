@@ -16,6 +16,8 @@ from md2typst.ast import (
     CodeBlock,
     Document,
     Emphasis,
+    FootnoteDef,
+    FootnoteRef,
     HardBreak,
     Heading,
     HtmlBlock,
@@ -91,11 +93,35 @@ class MistuneParser(MarkdownParser):
         nodes: list[Node] = []
 
         for token in tokens:
-            node = self._convert_block(token)
-            if node is not None:
-                nodes.append(node)
+            token_type = token.get("type")
+
+            # Handle footnotes specially - it contains multiple footnote items
+            if token_type in ("footnote_list", "footnotes"):
+                footnotes = self._convert_footnotes(token)
+                nodes.extend(footnotes)
+            else:
+                node = self._convert_block(token)
+                if node is not None:
+                    nodes.append(node)
 
         return nodes
+
+    def _convert_footnotes(self, token: dict) -> list[FootnoteDef]:
+        """Convert footnote_list to list of FootnoteDef nodes."""
+        footnotes: list[FootnoteDef] = []
+
+        for child in token.get("children", []):
+            if child.get("type") == "footnote_item":
+                attrs = child.get("attrs", {})
+                # Key can be 'key' or 'name' depending on mistune version
+                label = str(attrs.get("key", attrs.get("name", "")))
+                # Convert footnote content
+                item_children = self._convert_blocks(child.get("children", []))
+                footnotes.append(
+                    FootnoteDef(label=label, children=tuple(item_children))
+                )
+
+        return footnotes
 
     def _convert_block(self, token: dict) -> Node | None:
         """Convert a single block token to AST node."""
@@ -251,6 +277,14 @@ class MistuneParser(MarkdownParser):
 
         if token_type == "inline_html":
             return HtmlInline(content=token.get("raw", ""))
+
+        if token_type == "footnote_ref":
+            # Label can be in 'raw' or attrs depending on mistune version
+            label = token.get("raw", "")
+            if not label:
+                attrs = token.get("attrs", {})
+                label = str(attrs.get("key", attrs.get("name", "")))
+            return FootnoteRef(label=label)
 
         return None
 

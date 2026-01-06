@@ -16,6 +16,8 @@ from md2typst.ast import (
     CodeBlock,
     Document,
     Emphasis,
+    FootnoteDef,
+    FootnoteRef,
     HardBreak,
     Heading,
     HtmlBlock,
@@ -190,6 +192,17 @@ class MarkdownItParser(MarkdownParser):
                 i, table_node = self._convert_table(tokens, i)
                 nodes.append(table_node)
 
+            elif token.type == "footnote_block_open":
+                # Process all footnote definitions until footnote_block_close
+                i += 1
+                while i < len(tokens) and tokens[i].type != "footnote_block_close":
+                    if tokens[i].type == "footnote_open":
+                        i, footnote_node = self._convert_footnote_def(tokens, i)
+                        nodes.append(footnote_node)
+                    else:
+                        i += 1
+                i += 1  # Skip footnote_block_close
+
             else:
                 # Skip unknown tokens
                 i += 1
@@ -324,6 +337,33 @@ class MarkdownItParser(MarkdownParser):
             ordered=ordered, items=tuple(items), start=start if ordered else None
         )
 
+    def _convert_footnote_def(
+        self, tokens: list[Token], start_idx: int
+    ) -> tuple[int, FootnoteDef]:
+        """Convert footnote definition tokens to FootnoteDef node."""
+        token = tokens[start_idx]
+        # Get label from meta
+        meta = token.meta or {}
+        label = str(meta.get("label", meta.get("id", "")))
+
+        i = start_idx + 1  # Skip footnote_open
+
+        # Collect tokens until footnote_close
+        inner_tokens: list[Token] = []
+        depth = 1
+        while i < len(tokens) and depth > 0:
+            if tokens[i].type == "footnote_open":
+                depth += 1
+            elif tokens[i].type == "footnote_close":
+                depth -= 1
+            if depth > 0:
+                inner_tokens.append(tokens[i])
+            i += 1
+
+        # Convert inner content
+        children = self._convert_blocks(inner_tokens)
+        return i, FootnoteDef(label=label, children=tuple(children))
+
     def _convert_inline(self, tokens: list[Token]) -> list[Node]:
         """Convert inline tokens to AST nodes."""
         nodes: list[Node] = []
@@ -381,6 +421,13 @@ class MarkdownItParser(MarkdownParser):
 
             elif token.type == "html_inline":
                 nodes.append(HtmlInline(content=token.content))
+                i += 1
+
+            elif token.type == "footnote_ref":
+                # Get label from meta
+                meta = token.meta or {}
+                label = str(meta.get("label", meta.get("id", "")))
+                nodes.append(FootnoteRef(label=label))
                 i += 1
 
             else:

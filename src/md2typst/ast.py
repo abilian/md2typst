@@ -129,6 +129,27 @@ class TableCell(Node):
         return f"TableCell({len(self.children)} children)"
 
 
+@dataclass(frozen=True)
+class FootnoteDef(Node):
+    """Footnote definition (block-level).
+
+    Contains the content of a footnote, referenced by label elsewhere in the
+    document. The content can include multiple block elements (paragraphs,
+    lists, etc.).
+
+    Example Markdown:
+        [^1]: This is a footnote with *formatting*.
+
+            Indented paragraphs continue the footnote.
+    """
+
+    label: str  # The reference label (e.g., "1", "note")
+    children: tuple[Node, ...] = ()  # Footnote content (can be multi-block)
+
+    def __str__(self) -> str:
+        return f"FootnoteDef(label={self.label!r}, {len(self.children)} children)"
+
+
 # =============================================================================
 # Inline Nodes
 # =============================================================================
@@ -246,3 +267,20 @@ class HtmlInline(Node):
     def __str__(self) -> str:
         preview = self.content[:20] + "..." if len(self.content) > 20 else self.content
         return f"HtmlInline({preview!r})"
+
+
+@dataclass(frozen=True)
+class FootnoteRef(Node):
+    """Inline reference to a footnote.
+
+    References a FootnoteDef by label. During generation, the reference is
+    resolved and the footnote content is inlined.
+
+    Example Markdown:
+        Here is some text with a footnote[^1] and another[^note].
+    """
+
+    label: str  # The reference label (e.g., "1", "note")
+
+    def __str__(self) -> str:
+        return f"FootnoteRef(label={self.label!r})"
