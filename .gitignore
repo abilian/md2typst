@@ -5,6 +5,12 @@ build/
 dist/
 wheels/
 *.egg-info
+.hypothesis/    
+.coverage
 
 # Virtual environments
-.venv
+.venv/
+.python-version
+
+# Local / secret
+.envrc          

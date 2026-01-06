@@ -1,6 +1,6 @@
 [project]
 name = "md2typst"
-version = "0.5.0"
+version = "0.1.0"
 description = "Markdown to Typst converter with multiple parser support"
 readme = "README.md"
 authors = [
