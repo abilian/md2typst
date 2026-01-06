@@ -31,11 +31,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Generator produces Typst `#index("term")` or `#index("term", "subterm")`
   - Requires `mdit_py_plugins.attrs` plugin with markdown-it parser
 
-- Added `mdit-py-plugins` as a dev dependency for footnote and index entry support
+- **Math support**: LaTeX math syntax with pass-through to Typst's mitex package
+  - New AST nodes: `MathInline` and `MathBlock`
+  - Inline math (`$...$`) outputs `#mi("...")`
+  - Display math (`$$...$$`) outputs `#mitex(`...`)`
+  - Parser support:
+    - markdown-it-py: `mdit_py_plugins.dollarmath`
+    - mistune: `math` plugin
+    - marko: Not supported (no math extension)
+  - Requires `#import "@preview/mitex:0.2.0": *` in Typst document
+
+- Added `mdit-py-plugins` as a dev dependency for footnote, index, and math support
 
 - New integration tests:
   - `tests/b_integration/test_footnotes.py` - footnote parsing and generation
   - `tests/b_integration/test_index.py` - index entry parsing and generation
+  - `tests/b_integration/test_math.py` - math parsing and generation
 
 ### Changed
 

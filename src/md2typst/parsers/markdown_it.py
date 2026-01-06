@@ -27,6 +27,8 @@ from md2typst.ast import (
     Link,
     List,
     ListItem,
+    MathBlock,
+    MathInline,
     Node,
     Paragraph,
     SoftBreak,
@@ -102,6 +104,11 @@ class MarkdownItParser(MarkdownParser):
             if "spans" not in kwargs:
                 kwargs["spans"] = True
             self._md.use(module.attrs_plugin, **kwargs)
+            return
+
+        # Special handling for dollarmath plugin
+        if plugin == "mdit_py_plugins.dollarmath":
+            self._md.use(module.dollarmath_plugin, **kwargs)
             return
 
         # Most plugins have a _plugin attribute or are callable
@@ -198,6 +205,12 @@ class MarkdownItParser(MarkdownParser):
 
             elif token.type == "html_block":
                 nodes.append(HtmlBlock(content=token.content))
+                i += 1
+
+            elif token.type == "math_block":
+                # Strip leading/trailing newlines from content
+                content = token.content.strip("\n")
+                nodes.append(MathBlock(content=content))
                 i += 1
 
             elif token.type == "table_open":
@@ -433,6 +446,10 @@ class MarkdownItParser(MarkdownParser):
 
             elif token.type == "html_inline":
                 nodes.append(HtmlInline(content=token.content))
+                i += 1
+
+            elif token.type == "math_inline":
+                nodes.append(MathInline(content=token.content))
                 i += 1
 
             elif token.type == "footnote_ref":

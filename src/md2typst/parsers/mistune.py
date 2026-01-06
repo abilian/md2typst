@@ -26,6 +26,8 @@ from md2typst.ast import (
     Link,
     List,
     ListItem,
+    MathBlock,
+    MathInline,
     Node,
     Paragraph,
     SoftBreak,
@@ -171,6 +173,9 @@ class MistuneParser(MarkdownParser):
         if token_type == "table":
             return self._convert_table(token)
 
+        if token_type == "block_math":
+            return MathBlock(content=token.get("raw", ""))
+
         return None
 
     def _convert_table(self, token: dict) -> Table:
@@ -285,6 +290,9 @@ class MistuneParser(MarkdownParser):
                 attrs = token.get("attrs", {})
                 label = str(attrs.get("key", attrs.get("name", "")))
             return FootnoteRef(label=label)
+
+        if token_type == "inline_math":
+            return MathInline(content=token.get("raw", ""))
 
         return None
 

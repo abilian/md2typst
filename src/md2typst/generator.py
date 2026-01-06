@@ -30,6 +30,8 @@ from .ast import (
     Link,
     List,
     ListItem,
+    MathBlock,
+    MathInline,
     Paragraph,
     SoftBreak,
     Strikethrough,
@@ -464,6 +466,41 @@ class TypstGenerator:
             return f'#index("{term}", "{subterm}")'
 
         return f'#index("{term}")'
+
+    def visit_MathInline(self, node: MathInline) -> str:
+        """Convert inline math to Typst.
+
+        Uses mitex for LaTeX pass-through.
+        Markdown: $E = mc^2$
+        Typst: #mi("E = mc^2")
+        """
+        # Escape for Typst string
+        content = escape_typst_string(node.content)
+        return f'#mi("{content}")'
+
+    def visit_MathBlock(self, node: MathBlock) -> str:
+        """Convert display math to Typst.
+
+        Uses mitex for LaTeX pass-through.
+        Markdown: $$...$$
+        Typst: #mitex(`...`) in a block
+        """
+        # Use raw string (backticks) to avoid escaping issues
+        content = node.content
+        # If content contains backticks, we need to handle it
+        if "`" in content:
+            # Use more backticks as delimiter
+            max_ticks = 0
+            current = 0
+            for char in content:
+                if char == "`":
+                    current += 1
+                    max_ticks = max(max_ticks, current)
+                else:
+                    current = 0
+            delim = "`" * (max_ticks + 1)
+            return f"#mitex({delim}{content}{delim})"
+        return f"#mitex(`{content}`)"
 
 
 def generate_typst(doc: Document, note_style: str = "footnote") -> str:

@@ -287,6 +287,44 @@ class FootnoteRef(Node):
 
 
 @dataclass(frozen=True)
+class MathInline(Node):
+    """Inline math expression.
+
+    Example Markdown:
+        The equation $E = mc^2$ is famous.
+
+    Example Typst output (pass-through mode):
+        The equation #mi("E = mc^2") is famous.
+    """
+
+    content: str  # LaTeX math content (without delimiters)
+
+    def __str__(self) -> str:
+        preview = self.content[:20] + "..." if len(self.content) > 20 else self.content
+        return f"MathInline({preview!r})"
+
+
+@dataclass(frozen=True)
+class MathBlock(Node):
+    """Display/block math expression.
+
+    Example Markdown:
+        $$
+        \\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}
+        $$
+
+    Example Typst output (pass-through mode):
+        #mitex(`\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}`)
+    """
+
+    content: str  # LaTeX math content (without delimiters)
+
+    def __str__(self) -> str:
+        lines = self.content.count("\n") + 1
+        return f"MathBlock({lines} lines)"
+
+
+@dataclass(frozen=True)
 class IndexEntry(Node):
     """An index entry marker for document indexing.
 

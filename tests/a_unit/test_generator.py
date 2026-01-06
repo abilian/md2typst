@@ -19,6 +19,8 @@ from md2typst.ast import (
     Link,
     List,
     ListItem,
+    MathBlock,
+    MathInline,
     Paragraph,
     SoftBreak,
     Strikethrough,
@@ -741,3 +743,74 @@ class TestIndexEntries:
         assert result.startswith("== ")
         assert '#index("Introduction")' in result
         assert "Introduction" in result
+
+
+class TestMath:
+    """Test math generation."""
+
+    def test_simple_inline_math(self):
+        """Test simple inline math expression."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="The equation "),
+                        MathInline(content="E = mc^2"),
+                        Text(content=" is famous."),
+                    )
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert '#mi("E = mc^2")' in result
+        assert "The equation " in result
+        assert " is famous." in result
+
+    def test_inline_math_with_special_chars(self):
+        """Test inline math with characters that need escaping."""
+        doc = Document(
+            children=(Paragraph(children=(MathInline(content='x "quoted"'),)),)
+        )
+        result = generate_typst(doc)
+        # Quotes should be escaped in Typst string
+        assert '#mi("x \\"quoted\\"")' in result
+
+    def test_simple_block_math(self):
+        """Test simple display math."""
+        doc = Document(children=(MathBlock(content="\\int_0^\\infty e^{-x^2} dx"),))
+        result = generate_typst(doc)
+        assert "#mitex(`" in result
+        assert "\\int_0^\\infty e^{-x^2} dx" in result
+        assert "`)" in result
+
+    def test_block_math_with_backticks(self):
+        """Test display math containing backticks."""
+        doc = Document(children=(MathBlock(content="x = `code`"),))
+        result = generate_typst(doc)
+        # Should use double backticks as delimiter
+        assert "``" in result
+
+    def test_multiline_block_math(self):
+        """Test multiline display math."""
+        doc = Document(children=(MathBlock(content="a = b\nc = d"),))
+        result = generate_typst(doc)
+        assert "#mitex(`a = b\nc = d`)" in result
+
+    def test_math_in_paragraph(self):
+        """Test math mixed with text."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Given "),
+                        MathInline(content="f(x) = x^2"),
+                        Text(content=", we have "),
+                        MathInline(content="g(x) = 2x"),
+                        Text(content="."),
+                    )
+                ),
+            )
+        )
+        result = generate_typst(doc)
+        assert '#mi("f(x) = x^2")' in result
+        assert '#mi("g(x) = 2x")' in result
