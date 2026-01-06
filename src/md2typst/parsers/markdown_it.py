@@ -247,7 +247,7 @@ class MarkdownItParser(MarkdownParser):
                                     header.append(TableCell(children=tuple(children)))
                                     i += 1
                                 else:
-                                    header.append(TableCell(children=[]))
+                                    header.append(TableCell(children=()))
                                 # Skip th_close
                                 if i < len(tokens) and tokens[i].type == "th_close":
                                     i += 1
@@ -276,7 +276,7 @@ class MarkdownItParser(MarkdownParser):
                                     row.append(TableCell(children=tuple(children)))
                                     i += 1
                                 else:
-                                    row.append(TableCell(children=[]))
+                                    row.append(TableCell(children=()))
                                 # Skip td_close
                                 if i < len(tokens) and tokens[i].type == "td_close":
                                     i += 1

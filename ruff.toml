@@ -5,8 +5,6 @@ lint.select = [
 lint.extend-ignore = [
     # Later...
     "D", # pydocstyle
-    "DOC",
-    "TRY",
     "PLR",
     "ARG",
     "FBT",

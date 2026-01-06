@@ -246,7 +246,7 @@ class TypstGenerator:
     # Inline visitors
     # =========================================================================
 
-    def _visit_children_inline(self, children: list[Node]) -> str:
+    def _visit_children_inline(self, children: tuple[Node, ...]) -> str:
         """Visit all children and concatenate results."""
         parts: list[str] = []
         for child in children:

@@ -80,7 +80,7 @@ class MistuneParser(MarkdownParser):
         """Parse Markdown text into AST."""
         tokens = self._md(text)
         if not isinstance(tokens, list):
-            return Document(children=[])
+            return Document(children=())
         return self._convert_document(tokens)
 
     def _convert_document(self, tokens: list[dict]) -> Document:
