@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-02-12
+
+### Added
+
+- **Index entries support**: Mark terms for inclusion in a document index (markdown-it only)
+  - New AST node: `IndexEntry(term, subterm, see)`
+  - Pandoc-style syntax: `[Python]{.index}` or `[text]{.index key="Term!Subterm"}`
+  - Generator produces Typst `#index("term")` or `#index("term", "subterm")`
+  - Requires `mdit_py_plugins.attrs` plugin with markdown-it parser
+
+- **Math support**: LaTeX math syntax with pass-through to Typst's mitex package
+  - New AST nodes: `MathInline` and `MathBlock`
+  - Inline math (`$...$`) outputs `#mi("...")`
+  - Display math (`$$...$$`) outputs `#mitex(`...`)`
+  - Parser support:
+    - markdown-it-py: `mdit_py_plugins.dollarmath`
+    - mistune: `math` plugin
+    - marko: Not supported (no math extension)
+  - Requires `#import "@preview/mitex:0.2.0": *` in Typst document
+
+### Fixed
+
+- Fixed table generation producing invalid Typst markup.
+
 ## [0.2.0] - 2025-01-06
 
 ### Added
@@ -25,28 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Produces superscript references (`#super[1]`) and a "Notes" section with numbered list
   - Repeated references to the same note use the same number
 
-- **Index entries support**: Mark terms for inclusion in a document index (markdown-it only)
-  - New AST node: `IndexEntry(term, subterm, see)`
-  - Pandoc-style syntax: `[Python]{.index}` or `[text]{.index key="Term!Subterm"}`
-  - Generator produces Typst `#index("term")` or `#index("term", "subterm")`
-  - Requires `mdit_py_plugins.attrs` plugin with markdown-it parser
-
-- **Math support**: LaTeX math syntax with pass-through to Typst's mitex package
-  - New AST nodes: `MathInline` and `MathBlock`
-  - Inline math (`$...$`) outputs `#mi("...")`
-  - Display math (`$$...$$`) outputs `#mitex(`...`)`
-  - Parser support:
-    - markdown-it-py: `mdit_py_plugins.dollarmath`
-    - mistune: `math` plugin
-    - marko: Not supported (no math extension)
-  - Requires `#import "@preview/mitex:0.2.0": *` in Typst document
-
-- Added `mdit-py-plugins` as a dev dependency for footnote, index, and math support
+- Added `mdit-py-plugins` as a dev dependency for footnote support
 
 - New integration tests:
   - `tests/b_integration/test_footnotes.py` - footnote parsing and generation
-  - `tests/b_integration/test_index.py` - index entry parsing and generation
-  - `tests/b_integration/test_math.py` - math parsing and generation
 
 ### Changed
 
