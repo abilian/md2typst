@@ -188,7 +188,8 @@ class TestTables:
         doc = Document(children=[table])
         result = generate_typst(doc)
 
-        assert "columns: (left, center, right)" in result
+        assert "columns: 3" in result
+        assert "align: (left, center, right)" in result
 
     def test_table_end_to_end(self, parser):
         """Test full conversion of tables."""

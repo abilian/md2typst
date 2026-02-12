@@ -236,22 +236,24 @@ class TypstGenerator:
         if num_cols == 0:
             return ""
 
-        # Build column specification
-        col_specs = []
+        # Build alignment specification
+        align_specs = []
         for align in node.alignments:
             if align == "left":
-                col_specs.append("left")
+                align_specs.append("left")
             elif align == "right":
-                col_specs.append("right")
+                align_specs.append("right")
             elif align == "center":
-                col_specs.append("center")
+                align_specs.append("center")
             else:
-                col_specs.append("auto")
+                align_specs.append("auto")
 
-        columns = ", ".join(col_specs) if col_specs else "auto, " * num_cols
-        columns = columns.rstrip(", ")
-
-        lines = [f"#table(columns: ({columns}),"]
+        # columns takes widths (auto), align takes alignment values
+        if align_specs:
+            align_str = ", ".join(align_specs)
+            lines = [f"#table(columns: {num_cols}, align: ({align_str}),"]
+        else:
+            lines = [f"#table(columns: {num_cols},"]
 
         # Header row - all cells in a single table.header() call
         header_cells = []
