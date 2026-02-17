@@ -127,14 +127,22 @@ class MarkdownItParser(MarkdownParser):
             raise ValueError(msg)
 
     def parse(self, text: str) -> Document:
-        """Parse Markdown text into AST."""
-        tokens = self._md.parse(text)
-        return self._convert_document(tokens)
+        """Parse Markdown text into AST.
 
-    def _convert_document(self, tokens: list[Token]) -> Document:
+        Extracts YAML front matter if present, then parses the remaining content.
+        """
+        from md2typst.frontmatter import extract_frontmatter
+
+        metadata, text = extract_frontmatter(text)
+        tokens = self._md.parse(text)
+        return self._convert_document(tokens, metadata)
+
+    def _convert_document(
+        self, tokens: list[Token], metadata: dict | None = None
+    ) -> Document:
         """Convert top-level tokens to Document."""
         children = self._convert_blocks(tokens)
-        return Document(children=tuple(children))
+        return Document(children=tuple(children), metadata=metadata or {})
 
     def _convert_blocks(self, tokens: list[Token]) -> list[Node]:
         """Convert a list of block tokens to AST nodes."""

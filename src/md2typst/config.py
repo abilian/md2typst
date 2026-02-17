@@ -24,12 +24,14 @@ class Config:
         parser: Name of the Markdown parser to use.
         parser_options: Parser-specific configuration options.
         plugins: List of parser plugins to load.
+        stylesheets: List of Typst stylesheet modules to import.
         output_options: Options for Typst output generation.
     """
 
     parser: str = "markdown-it"
     parser_options: dict[str, Any] = field(default_factory=dict)
     plugins: list[str] = field(default_factory=list)
+    stylesheets: list[str] = field(default_factory=list)
     output_options: dict[str, Any] = field(default_factory=dict)
 
     def merge(self, other: dict[str, Any]) -> Config:
@@ -41,6 +43,7 @@ class Config:
             parser=other.get("parser", self.parser),
             parser_options={**self.parser_options, **other.get("parser_options", {})},
             plugins=other.get("plugins", self.plugins) or self.plugins,
+            stylesheets=other.get("stylesheets", self.stylesheets) or self.stylesheets,
             output_options={**self.output_options, **other.get("output_options", {})},
         )
 
@@ -51,6 +54,7 @@ class Config:
             parser=data.get("parser", "markdown-it"),
             parser_options=data.get("parser_options", {}),
             plugins=data.get("plugins", []),
+            stylesheets=data.get("stylesheets", []),
             output_options=data.get("output_options", {}),
         )
 

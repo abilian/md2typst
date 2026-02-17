@@ -75,14 +75,22 @@ class MarkoParser(MarkdownParser):
         self._md.use(plugin)
 
     def parse(self, text: str) -> Document:
-        """Parse Markdown text into AST."""
-        doc = self._md.parse(text)
-        return self._convert_document(doc)
+        """Parse Markdown text into AST.
 
-    def _convert_document(self, doc: marko_block.Document) -> Document:
+        Extracts YAML front matter if present, then parses the remaining content.
+        """
+        from md2typst.frontmatter import extract_frontmatter
+
+        metadata, text = extract_frontmatter(text)
+        doc = self._md.parse(text)
+        return self._convert_document(doc, metadata)
+
+    def _convert_document(
+        self, doc: marko_block.Document, metadata: dict | None = None
+    ) -> Document:
         """Convert marko Document to our Document."""
         children = self._convert_children(doc.children)
-        return Document(children=tuple(children))
+        return Document(children=tuple(children), metadata=metadata or {})
 
     def _convert_children(self, children: Iterable[Any]) -> list[Node]:
         """Convert a list of marko elements to AST nodes."""

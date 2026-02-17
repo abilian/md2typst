@@ -814,3 +814,80 @@ class TestMath:
         result = generate_typst(doc)
         assert '#mi("f(x) = x^2")' in result
         assert '#mi("g(x) = 2x")' in result
+
+
+class TestStylesheets:
+    """Test stylesheet import generation."""
+
+    def test_no_stylesheets(self):
+        """Test generation without stylesheets."""
+        doc = Document(children=(Paragraph(children=(Text(content="Hello"),)),))
+        result = generate_typst(doc)
+        assert not result.startswith("#import")
+
+    def test_single_stylesheet(self):
+        """Test single stylesheet import."""
+        doc = Document(children=(Paragraph(children=(Text(content="Hello"),)),))
+        result = generate_typst(doc, stylesheets=["mystyle"])
+        assert '#import "mystyle.typ": *' in result
+        assert "Hello" in result
+
+    def test_multiple_stylesheets(self):
+        """Test multiple stylesheet imports."""
+        doc = Document(children=(Paragraph(children=(Text(content="Hello"),)),))
+        result = generate_typst(doc, stylesheets=["style1", "style2", "style3"])
+
+        lines = result.split("\n")
+        assert lines[0] == '#import "style1.typ": *'
+        assert lines[1] == '#import "style2.typ": *'
+        assert lines[2] == '#import "style3.typ": *'
+
+    def test_stylesheet_with_extension_not_duplicated(self):
+        """Test that .typ extension is not added if already present."""
+        doc = Document(children=(Paragraph(children=(Text(content="Hello"),)),))
+        result = generate_typst(doc, stylesheets=["mystyle.typ"])
+        assert '#import "mystyle.typ": *' in result
+        assert "mystyle.typ.typ" not in result
+
+    def test_stylesheets_before_content(self):
+        """Test that imports come before document content."""
+        doc = Document(
+            children=(
+                Heading(level=1, children=(Text(content="Title"),)),
+                Paragraph(children=(Text(content="Body"),)),
+            )
+        )
+        result = generate_typst(doc, stylesheets=["styles"])
+
+        import_pos = result.find("#import")
+        heading_pos = result.find("= Title")
+        assert import_pos < heading_pos
+
+    def test_stylesheets_with_endnotes(self):
+        """Test stylesheets work correctly with endnote style."""
+        doc = Document(
+            children=(
+                Paragraph(
+                    children=(
+                        Text(content="Text"),
+                        FootnoteRef(label="1"),
+                    )
+                ),
+                FootnoteDef(
+                    label="1",
+                    children=(Paragraph(children=(Text(content="Note"),)),),
+                ),
+            )
+        )
+        result = generate_typst(doc, note_style="endnote", stylesheets=["styles"])
+
+        # Imports at start
+        assert result.startswith('#import "styles.typ": *')
+        # Endnotes at end
+        assert result.endswith("+ Note")
+
+    def test_empty_stylesheets_list(self):
+        """Test that empty stylesheet list produces no imports."""
+        doc = Document(children=(Paragraph(children=(Text(content="Hello"),)),))
+        result = generate_typst(doc, stylesheets=[])
+        assert "#import" not in result

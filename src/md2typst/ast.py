@@ -6,7 +6,8 @@ representation between Markdown parsing and Typst code generation.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -24,12 +25,19 @@ class Node:
 
 @dataclass(frozen=True)
 class Document(Node):
-    """Root node containing all block elements."""
+    """Root node containing all block elements.
+
+    Attributes:
+        children: The block-level child nodes.
+        metadata: Optional front matter metadata (from YAML).
+    """
 
     children: tuple[Node, ...] = ()
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:
-        return f"Document({len(self.children)} children)"
+        meta = f", {len(self.metadata)} meta" if self.metadata else ""
+        return f"Document({len(self.children)} children{meta})"
 
 
 @dataclass(frozen=True)

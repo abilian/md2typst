@@ -42,7 +42,8 @@ from .ast import (
 )
 
 # Characters that need escaping in Typst content mode
-TYPST_SPECIAL_CHARS = re.compile(r"([*_`#@$\\<>\[\]])")
+# Note: ( must be escaped to prevent interpretation as function call after ]
+TYPST_SPECIAL_CHARS = re.compile(r"([*_`#@$\\<>\[\](])")
 
 
 def escape_typst(text: str) -> str:
@@ -58,18 +59,24 @@ def escape_typst_string(text: str) -> str:
 class TypstGenerator:
     """Generates Typst code from AST."""
 
-    def __init__(self, note_style: str = "footnote") -> None:
+    def __init__(
+        self,
+        note_style: str = "footnote",
+        stylesheets: list[str] | None = None,
+    ) -> None:
         """Initialize the generator.
 
         Args:
             note_style: How to render footnotes. Options:
                 - "footnote": Inline footnotes using Typst's #footnote[]
                 - "endnote": Superscript numbers with notes collected at end
+            stylesheets: List of Typst stylesheet modules to import.
         """
         self._indent_level = 0
         self._in_list = False
         self._footnotes: dict[str, FootnoteDef] = {}
         self._note_style = note_style
+        self._stylesheets = stylesheets or []
         # Track endnote references in order for numbering
         self._endnote_refs: list[str] = []
 
@@ -101,6 +108,43 @@ class TypstGenerator:
             if endnotes_section:
                 result = result + "\n\n" + endnotes_section
 
+        # Prepend front matter variables, stylesheet imports, and preamble
+        prepended: list[str] = []
+
+        # Extract preamble and stylesheets from metadata (if present)
+        preamble = ""
+        extra_stylesheets: list[str] = []
+        if doc.metadata:
+            preamble = doc.metadata.get("preamble", "")
+            # Support both 'stylesheet' (single) and 'stylesheets' (list) in front matter
+            fm_stylesheet = doc.metadata.get("stylesheet")
+            fm_stylesheets = doc.metadata.get("stylesheets", [])
+            if fm_stylesheet:
+                extra_stylesheets.append(fm_stylesheet)
+            if isinstance(fm_stylesheets, list):
+                extra_stylesheets.extend(fm_stylesheets)
+            elif fm_stylesheets:
+                extra_stylesheets.append(str(fm_stylesheets))
+
+        # Generate front matter variables (excluding reserved keys)
+        if doc.metadata:
+            frontmatter = self._generate_frontmatter_variables(doc.metadata)
+            if frontmatter:
+                prepended.append(frontmatter)
+
+        # Merge stylesheets from config and front matter
+        all_stylesheets = self._stylesheets + extra_stylesheets
+        if all_stylesheets:
+            imports = self._generate_stylesheet_imports_list(all_stylesheets)
+            prepended.append(imports)
+
+        # Add preamble (raw Typst code from front matter)
+        if preamble and isinstance(preamble, str):
+            prepended.append(preamble.strip())
+
+        if prepended:
+            result = "\n\n".join(prepended) + "\n\n" + result
+
         return result
 
     def _generate_endnotes_section(self) -> str:
@@ -121,6 +165,82 @@ class TypstGenerator:
                 lines.append(f"+ {content}")
 
         return "\n".join(lines)
+
+    def _generate_stylesheet_imports(self) -> str:
+        """Generate Typst import statements for stylesheets."""
+        return self._generate_stylesheet_imports_list(self._stylesheets)
+
+    def _generate_stylesheet_imports_list(self, stylesheets: list[str]) -> str:
+        """Generate Typst import statements for a list of stylesheets."""
+        lines = []
+        for stylesheet in stylesheets:
+            # Add .typ extension if not present
+            if not stylesheet.endswith(".typ"):
+                stylesheet = f"{stylesheet}.typ"
+            lines.append(f'#import "{stylesheet}": *')
+        return "\n".join(lines)
+
+    # Reserved front matter keys that have special handling
+    RESERVED_FRONTMATTER_KEYS = {"preamble", "stylesheet", "stylesheets"}
+
+    def _generate_frontmatter_variables(self, metadata: dict) -> str:
+        """Generate Typst variable declarations from front matter.
+
+        Args:
+            metadata: Dictionary of front matter fields.
+
+        Returns:
+            Typst code defining the variables as #let statements.
+
+        Note:
+            Reserved keys (preamble, stylesheet, stylesheets) are handled
+            specially and not converted to variables.
+        """
+        lines = []
+        for key, value in metadata.items():
+            # Skip reserved keys that have special handling
+            if key in self.RESERVED_FRONTMATTER_KEYS:
+                continue
+
+            # Sanitize key for Typst (use hyphens, which Typst allows)
+            typst_key = key.replace("_", "-").replace(" ", "-")
+            var_name = f"doc-{typst_key}"
+
+            # Convert value to Typst literal
+            if value is None:
+                lines.append(f"#let {var_name} = none")
+            elif isinstance(value, bool):
+                lines.append(f"#let {var_name} = {str(value).lower()}")
+            elif isinstance(value, int | float):
+                lines.append(f"#let {var_name} = {value}")
+            elif isinstance(value, str):
+                escaped = self._escape_typst_string(value)
+                lines.append(f'#let {var_name} = "{escaped}"')
+            elif isinstance(value, list):
+                # Convert list to Typst array
+                items = []
+                for item in value:
+                    if isinstance(item, str):
+                        escaped = self._escape_typst_string(item)
+                        items.append(f'"{escaped}"')
+                    elif isinstance(item, bool):
+                        items.append(str(item).lower())
+                    elif isinstance(item, int | float):
+                        items.append(str(item))
+                    else:
+                        items.append(f'"{item}"')
+                lines.append(f"#let {var_name} = ({', '.join(items)},)")
+            else:
+                # Fallback: convert to string
+                escaped = self._escape_typst_string(str(value))
+                lines.append(f'#let {var_name} = "{escaped}"')
+
+        return "\n".join(lines)
+
+    def _escape_typst_string(self, s: str) -> str:
+        """Escape a string for use in Typst string literals."""
+        # Escape backslashes first, then quotes
+        return s.replace("\\", "\\\\").replace('"', '\\"')
 
     def _collect_footnotes(self, node: Node) -> None:
         """Recursively collect all FootnoteDef nodes."""
@@ -505,12 +625,17 @@ class TypstGenerator:
         return f"#mitex(`{content}`)"
 
 
-def generate_typst(doc: Document, note_style: str = "footnote") -> str:
+def generate_typst(
+    doc: Document,
+    note_style: str = "footnote",
+    stylesheets: list[str] | None = None,
+) -> str:
     """Convenience function to generate Typst from a Document.
 
     Args:
         doc: The Document AST to convert.
         note_style: How to render footnotes ("footnote" or "endnote").
+        stylesheets: List of Typst stylesheet modules to import.
     """
-    generator = TypstGenerator(note_style=note_style)
+    generator = TypstGenerator(note_style=note_style, stylesheets=stylesheets)
     return generator.generate(doc)

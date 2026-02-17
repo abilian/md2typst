@@ -79,16 +79,24 @@ class MistuneParser(MarkdownParser):
             self._md = mistune.create_markdown(renderer=None, plugins=self._plugins)
 
     def parse(self, text: str) -> Document:
-        """Parse Markdown text into AST."""
+        """Parse Markdown text into AST.
+
+        Extracts YAML front matter if present, then parses the remaining content.
+        """
+        from md2typst.frontmatter import extract_frontmatter
+
+        metadata, text = extract_frontmatter(text)
         tokens = self._md(text)
         if not isinstance(tokens, list):
-            return Document(children=())
-        return self._convert_document(tokens)
+            return Document(children=(), metadata=metadata)
+        return self._convert_document(tokens, metadata)
 
-    def _convert_document(self, tokens: list[dict]) -> Document:
+    def _convert_document(
+        self, tokens: list[dict], metadata: dict | None = None
+    ) -> Document:
         """Convert top-level tokens to Document."""
         children = self._convert_blocks(tokens)
-        return Document(children=tuple(children))
+        return Document(children=tuple(children), metadata=metadata or {})
 
     def _convert_blocks(self, tokens: list[dict]) -> list[Node]:
         """Convert a list of block tokens to AST nodes."""

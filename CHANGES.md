@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-02-12
+
+### Added
+
+- **YAML front matter support**: Extract metadata from Markdown files
+  - Parses YAML between `---` delimiters at document start
+  - Generates Typst variables (`#let doc-title = "..."`)
+  - Supports strings, numbers, booleans, lists, and null values
+  - Keys with underscores/spaces converted to hyphens (`my_key` → `doc-my-key`)
+
+- **Stylesheet imports**: Import Typst modules for styling
+  - CLI option: `--stylesheet NAME` (can be used multiple times)
+  - Config file: `stylesheets = ["style1", "style2"]`
+  - Front matter: `stylesheet: my-style` or `stylesheets: [style1, style2]`
+  - Generates `#import "name.typ": *` statements
+
+- **Preamble support**: Include raw Typst code in front matter
+  - Use `preamble: |` in front matter for multi-line Typst code
+  - Inserted after imports, before document content
+  - Enables `#show: apply-style` pattern for template functions
+
+### Fixed
+
+- Fixed parentheses after links causing Typst syntax errors
+  - `[link](url)(text)` now correctly escapes the opening parenthesis
+
 ## [0.2.1] - 2025-02-12
 
 ### Added

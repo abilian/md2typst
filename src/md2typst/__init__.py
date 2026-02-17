@@ -32,6 +32,7 @@ def convert(
     parser_options: dict[str, Any] | None = None,
     plugins: list[str] | None = None,
     output_options: dict[str, Any] | None = None,
+    stylesheets: list[str] | None = None,
 ) -> str:
     """Convert Markdown text to Typst.
 
@@ -41,6 +42,7 @@ def convert(
         parser_options: Optional parser-specific options.
         plugins: Optional list of parser plugins to load.
         output_options: Optional output generation options (e.g., note_style).
+        stylesheets: Optional list of Typst stylesheet modules to import.
 
     Returns:
         The generated Typst source code.
@@ -59,7 +61,7 @@ def convert(
 
     # Extract generator options
     note_style = (output_options or {}).get("note_style", "footnote")
-    return generate_typst(doc, note_style=note_style)
+    return generate_typst(doc, note_style=note_style, stylesheets=stylesheets)
 
 
 def convert_with_config(markdown: str, config: Config) -> str:
@@ -86,7 +88,11 @@ def convert_with_config(markdown: str, config: Config) -> str:
 
     # Extract generator options
     note_style = config.output_options.get("note_style", "footnote")
-    return generate_typst(doc, note_style=note_style)
+    return generate_typst(
+        doc,
+        note_style=note_style,
+        stylesheets=config.stylesheets,
+    )
 
 
 def main() -> None:
@@ -111,6 +117,11 @@ def main() -> None:
     @click.option(
         "--plugin", multiple=True, help="Load parser plugin (can be repeated)"
     )
+    @click.option(
+        "--stylesheet",
+        multiple=True,
+        help="Import Typst stylesheet module (can be repeated)",
+    )
     @click.option("--list-parsers", is_flag=True, help="List available parsers")
     @click.option("--show-config", is_flag=True, help="Show effective configuration")
     @click.version_option(__version__)
@@ -120,6 +131,7 @@ def main() -> None:
         parser: str | None,
         config_file: str | None,
         plugin: tuple[str, ...],
+        stylesheet: tuple[str, ...],
         list_parsers: bool,
         show_config: bool,
     ) -> None:
@@ -147,6 +159,8 @@ def main() -> None:
             cli_overrides["parser"] = parser
         if plugin:
             cli_overrides["plugins"] = list(plugin)
+        if stylesheet:
+            cli_overrides["stylesheets"] = list(stylesheet)
 
         # Load configuration
         config = load_config(
@@ -159,6 +173,7 @@ def main() -> None:
             click.echo("Effective configuration:")
             click.echo(f"  parser: {config.parser}")
             click.echo(f"  plugins: {config.plugins}")
+            click.echo(f"  stylesheets: {config.stylesheets}")
             click.echo(f"  parser_options: {config.parser_options}")
             click.echo(f"  output_options: {config.output_options}")
             return

@@ -357,3 +357,96 @@ note_style = "endnote"
 """)
         result = load_config_from_file(config_file)
         assert result["output_options"]["note_style"] == "endnote"
+
+
+class TestStylesheets:
+    """Test stylesheet configuration and usage."""
+
+    def test_default_stylesheets_empty(self):
+        """Test that default Config has empty stylesheets."""
+        config = Config()
+        assert config.stylesheets == []
+
+    def test_custom_stylesheets(self):
+        """Test Config with custom stylesheets."""
+        config = Config(stylesheets=["mystyle", "utils"])
+        assert config.stylesheets == ["mystyle", "utils"]
+
+    def test_merge_stylesheets(self):
+        """Test that stylesheets are properly merged."""
+        config = Config(stylesheets=["a", "b"])
+        merged = config.merge({"stylesheets": ["c", "d"]})
+        assert merged.stylesheets == ["c", "d"]
+
+    def test_merge_empty_stylesheets_keeps_original(self):
+        """Test that empty stylesheets list keeps original."""
+        config = Config(stylesheets=["a", "b"])
+        merged = config.merge({"stylesheets": []})
+        assert merged.stylesheets == ["a", "b"]
+
+    def test_stylesheets_from_config_file(self, tmp_path):
+        """Test loading stylesheets from config file."""
+        config_file = tmp_path / ".md2typst.toml"
+        config_file.write_text("""
+stylesheets = ["mystyle", "utils.typ"]
+""")
+        result = load_config_from_file(config_file)
+        assert result["stylesheets"] == ["mystyle", "utils.typ"]
+
+    def test_stylesheets_in_pyproject(self, tmp_path):
+        """Test loading stylesheets from pyproject.toml."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.md2typst]
+stylesheets = ["my-styles"]
+""")
+        config = load_config(start_dir=tmp_path)
+        assert config.stylesheets == ["my-styles"]
+
+    def test_stylesheets_from_cli(self, tmp_path):
+        """Test stylesheets from CLI overrides."""
+        config = load_config(
+            start_dir=tmp_path,
+            cli_overrides={"stylesheets": ["style1", "style2"]},
+        )
+        assert config.stylesheets == ["style1", "style2"]
+
+    def test_stylesheets_generate_imports(self):
+        """Test that stylesheets generate import statements."""
+        from md2typst import convert_with_config
+
+        config = Config(stylesheets=["mystyle", "utils"])
+        result = convert_with_config("# Hello", config)
+
+        assert '#import "mystyle.typ": *' in result
+        assert '#import "utils.typ": *' in result
+        assert "= Hello" in result
+
+    def test_stylesheets_with_typ_extension(self):
+        """Test that .typ extension is not duplicated."""
+        from md2typst import convert_with_config
+
+        config = Config(stylesheets=["mystyle.typ"])
+        result = convert_with_config("# Hello", config)
+
+        assert '#import "mystyle.typ": *' in result
+        assert "mystyle.typ.typ" not in result
+
+    def test_stylesheets_prepended_to_output(self):
+        """Test that imports appear at the beginning."""
+        from md2typst import convert_with_config
+
+        config = Config(stylesheets=["styles"])
+        result = convert_with_config("# Hello", config)
+
+        # Import should be at the start
+        assert result.startswith('#import "styles.typ": *')
+
+    def test_from_dict_with_stylesheets(self):
+        """Test Config.from_dict with stylesheets."""
+        data = {
+            "parser": "mistune",
+            "stylesheets": ["a", "b"],
+        }
+        config = Config.from_dict(data)
+        assert config.stylesheets == ["a", "b"]
