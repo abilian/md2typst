@@ -40,6 +40,7 @@ from md2typst.ast import (
     Text,
     ThematicBreak,
 )
+from md2typst.frontmatter import extract_frontmatter
 
 from .base import MarkdownParser
 
@@ -79,8 +80,6 @@ class MarkoParser(MarkdownParser):
 
         Extracts YAML front matter if present, then parses the remaining content.
         """
-        from md2typst.frontmatter import extract_frontmatter
-
         metadata, text = extract_frontmatter(text)
         doc = self._md.parse(text)
         return self._convert_document(doc, metadata)
@@ -118,7 +117,7 @@ class MarkoParser(MarkdownParser):
             return Heading(level=level, children=tuple(children))
 
         if isinstance(element, marko_block.FencedCode):
-            lang = element.lang if element.lang else None
+            lang = element.lang or None
             # Get the raw code content
             code = self._get_raw_text(element.children)
             return CodeBlock(code=code, language=lang)

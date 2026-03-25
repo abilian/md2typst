@@ -421,9 +421,9 @@ class TestGFMFixtures:
 
         # For GFM features, check key markers are present
         if "strikethrough" in fixture_name:
-            assert (
-                "#strike[" in result
-            ), f"Missing strikethrough in {parser_name} output"
+            assert "#strike[" in result, (
+                f"Missing strikethrough in {parser_name} output"
+            )
 
         if "table" in fixture_name:
             assert "#table(" in result, f"Missing table in {parser_name} output"

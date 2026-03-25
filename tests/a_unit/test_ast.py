@@ -19,6 +19,8 @@ from md2typst.ast import (
     Link,
     List,
     ListItem,
+    MathBlock,
+    MathInline,
     Paragraph,
     SoftBreak,
     Strong,
@@ -74,26 +76,18 @@ class TestNodeStr:
         assert "Functions" in str(entry)
 
     def test_math_inline_str(self):
-        from md2typst.ast import MathInline
-
         m = MathInline(content="E = mc^2")
         assert "E = mc^2" in str(m)
 
     def test_math_inline_long_str(self):
-        from md2typst.ast import MathInline
-
         m = MathInline(content="a" * 50)
         assert "..." in str(m)
 
     def test_math_block_str(self):
-        from md2typst.ast import MathBlock
-
         m = MathBlock(content="\\int_0^\\infty e^{-x^2} dx")
         assert "1 lines" in str(m)
 
     def test_math_block_multiline_str(self):
-        from md2typst.ast import MathBlock
-
         m = MathBlock(content="line1\nline2\nline3")
         assert "3 lines" in str(m)
 

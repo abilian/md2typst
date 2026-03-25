@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from md2typst import convert_with_config
 from md2typst.config import (
     Config,
     find_config_file,
@@ -303,14 +304,12 @@ class TestConfigIntegration:
     """Integration tests for config with the converter."""
 
     def test_convert_with_config(self):
-        from md2typst import convert_with_config
 
         config = Config(parser="mistune")
         result = convert_with_config("# Hello", config)
         assert "= Hello" in result
 
     def test_convert_with_different_parsers(self):
-        from md2typst import convert_with_config
 
         md = "**bold** and *italic*"
 
@@ -322,7 +321,6 @@ class TestConfigIntegration:
 
     def test_convert_with_endnote_style(self):
         """Test that note_style output option is respected."""
-        from md2typst import convert_with_config
 
         # Markdown with footnote
         md = """Text with footnote[^1].
@@ -413,7 +411,6 @@ stylesheets = ["my-styles"]
 
     def test_stylesheets_generate_imports(self):
         """Test that stylesheets generate import statements."""
-        from md2typst import convert_with_config
 
         config = Config(stylesheets=["mystyle", "utils"])
         result = convert_with_config("# Hello", config)
@@ -424,7 +421,6 @@ stylesheets = ["my-styles"]
 
     def test_stylesheets_with_typ_extension(self):
         """Test that .typ extension is not duplicated."""
-        from md2typst import convert_with_config
 
         config = Config(stylesheets=["mystyle.typ"])
         result = convert_with_config("# Hello", config)
@@ -434,7 +430,6 @@ stylesheets = ["my-styles"]
 
     def test_stylesheets_prepended_to_output(self):
         """Test that imports appear at the beginning."""
-        from md2typst import convert_with_config
 
         config = Config(stylesheets=["styles"])
         result = convert_with_config("# Hello", config)

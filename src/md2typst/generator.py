@@ -8,7 +8,7 @@ This module converts the parser-agnostic AST to Typst source code.
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
     from .ast import Node
@@ -175,13 +175,16 @@ class TypstGenerator:
         lines = []
         for stylesheet in stylesheets:
             # Add .typ extension if not present
-            if not stylesheet.endswith(".typ"):
-                stylesheet = f"{stylesheet}.typ"
-            lines.append(f'#import "{stylesheet}": *')
+            name = stylesheet if stylesheet.endswith(".typ") else f"{stylesheet}.typ"
+            lines.append(f'#import "{name}": *')
         return "\n".join(lines)
 
     # Reserved front matter keys that have special handling
-    RESERVED_FRONTMATTER_KEYS = {"preamble", "stylesheet", "stylesheets"}
+    RESERVED_FRONTMATTER_KEYS: ClassVar[set[str]] = {
+        "preamble",
+        "stylesheet",
+        "stylesheets",
+    }
 
     def _generate_frontmatter_variables(self, metadata: dict) -> str:
         """Generate Typst variable declarations from front matter.

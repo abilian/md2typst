@@ -34,6 +34,10 @@ echo "# Hello **World**" | md2typst
 # Use a specific parser
 md2typst --parser mistune input.md
 
+# Convert directly to PDF (requires typst CLI)
+md2pdf input.md
+md2pdf input.md -o custom-output.pdf
+
 # List available parsers
 md2typst --list-parsers
 ```
@@ -114,6 +118,41 @@ parser = "markdown-it"
 plugins = ["gfm"]
 ```
 
+### Front Matter
+
+Markdown files can include YAML front matter for metadata, stylesheets, and raw Typst preamble:
+
+```markdown
+---
+title: My Document
+author: Jane Doe
+stylesheet: my-style
+preamble: |
+  #set text(lang: "fr", hyphenate: true)
+  #set par(justify: true)
+  #show heading.where(level: 1): it => { it; v(0.5em) }
+---
+
+# Hello World
+```
+
+This generates:
+
+```typst
+#let doc-title = "My Document"
+#let doc-author = "Jane Doe"
+
+#import "my-style.typ": *
+
+#set text(lang: "fr", hyphenate: true)
+#set par(justify: true)
+#show heading.where(level: 1): it => { it; v(0.5em) }
+
+= Hello World
+```
+
+The output ordering is: variables, stylesheet imports, preamble, then content.
+
 ### CLI Options
 
 ```bash
@@ -123,6 +162,7 @@ Options:
   -o, --output FILE      Output file (default: stdout)
   -p, --parser NAME      Parser to use (markdown-it, mistune, marko)
   --plugin NAME          Load parser plugin (can be repeated)
+  --stylesheet NAME      Import Typst stylesheet (can be repeated)
   --config FILE          Path to configuration file
   --list-parsers         List available parsers
   --show-config          Show effective configuration

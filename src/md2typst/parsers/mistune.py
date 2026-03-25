@@ -38,6 +38,7 @@ from md2typst.ast import (
     Text,
     ThematicBreak,
 )
+from md2typst.frontmatter import extract_frontmatter
 
 from .base import MarkdownParser
 
@@ -83,8 +84,6 @@ class MistuneParser(MarkdownParser):
 
         Extracts YAML front matter if present, then parses the remaining content.
         """
-        from md2typst.frontmatter import extract_frontmatter
-
         metadata, text = extract_frontmatter(text)
         tokens = self._md(text)
         if not isinstance(tokens, list):
@@ -149,7 +148,7 @@ class MistuneParser(MarkdownParser):
         if token_type in ("code_block", "block_code"):
             info = token.get("attrs", {}).get("info")
             raw = token.get("raw", "")
-            return CodeBlock(code=raw, language=info if info else None)
+            return CodeBlock(code=raw, language=info or None)
 
         if token_type == "block_quote":
             children = self._convert_blocks(token.get("children", []))

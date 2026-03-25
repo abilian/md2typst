@@ -35,7 +35,7 @@ subtitle: 'Single quotes work too'
 ---
 
 Content"""
-        metadata, remaining = extract_frontmatter(text)
+        metadata, _remaining = extract_frontmatter(text)
         assert metadata["title"] == "Document with: colon"
         assert metadata["subtitle"] == "Single quotes work too"
 
@@ -49,7 +49,7 @@ keywords:
 ---
 
 Content"""
-        metadata, remaining = extract_frontmatter(text)
+        metadata, _remaining = extract_frontmatter(text)
         assert metadata["keywords"] == ["python", "markdown", "typst"]
 
     def test_extract_nested_values(self):
@@ -61,7 +61,7 @@ author:
 ---
 
 Content"""
-        metadata, remaining = extract_frontmatter(text)
+        metadata, _remaining = extract_frontmatter(text)
         assert metadata["author"]["name"] == "John Doe"
         assert metadata["author"]["email"] == "john@example.com"
 

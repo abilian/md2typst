@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import contextlib
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 from typing import Any
+
+import click
 
 from md2typst.ast import Document
 from md2typst.config import Config, load_config
 from md2typst.generator import TypstGenerator, generate_typst
-from md2typst.parsers import get_parser, list_parsers
+from md2typst.parsers import get_parser, list_parsers as list_parsers_fn
 
 __version__ = "0.1.0"
 
@@ -21,8 +26,9 @@ __all__ = [
     "convert_with_config",
     "generate_typst",
     "get_parser",
-    "list_parsers",
+    "list_parsers_fn",
     "main",
+    "main_pdf",
 ]
 
 
@@ -97,9 +103,6 @@ def convert_with_config(markdown: str, config: Config) -> str:
 
 def main() -> None:
     """CLI entry point."""
-    import sys
-
-    import click
 
     @click.command()
     @click.argument("input", type=click.Path(exists=True), required=False)
@@ -140,10 +143,8 @@ def main() -> None:
         INPUT is the Markdown file to convert. Use - for stdin.
         """
         if list_parsers:
-            from md2typst.parsers import list_parsers as lp
-
             click.echo("Available parsers:")
-            for name in lp():
+            for name in list_parsers_fn():
                 click.echo(f"  - {name}")
             return
 
@@ -194,5 +195,86 @@ def main() -> None:
                 f.write(result)
         else:
             click.echo(result)
+
+    cli()
+
+
+def main_pdf() -> None:
+    """CLI entry point for md2pdf: convert Markdown to PDF via Typst."""
+
+    @click.command()
+    @click.argument("input", type=click.Path(exists=True))
+    @click.option(
+        "-o", "--output", type=click.Path(), help="Output PDF file (default: input with .pdf extension)"
+    )
+    @click.option("-p", "--parser", default=None, help="Parser to use")
+    @click.option(
+        "-c",
+        "--config",
+        "config_file",
+        type=click.Path(exists=True),
+        help="Config file path",
+    )
+    @click.option(
+        "--plugin", multiple=True, help="Load parser plugin (can be repeated)"
+    )
+    @click.option(
+        "--stylesheet",
+        multiple=True,
+        help="Import Typst stylesheet module (can be repeated)",
+    )
+    @click.version_option(__version__)
+    def cli(
+        input: str,
+        output: str | None,
+        parser: str | None,
+        config_file: str | None,
+        plugin: tuple[str, ...],
+        stylesheet: tuple[str, ...],
+    ) -> None:
+        """Convert Markdown to PDF via Typst.
+
+        INPUT is the Markdown file to convert.
+        """
+        input_path = Path(input)
+        output_path = Path(output) if output else input_path.with_suffix(".pdf")
+
+        # Build CLI overrides
+        cli_overrides: dict[str, Any] = {}
+        if parser:
+            cli_overrides["parser"] = parser
+        if plugin:
+            cli_overrides["plugins"] = list(plugin)
+        if stylesheet:
+            cli_overrides["stylesheets"] = list(stylesheet)
+
+        # Load configuration
+        config = load_config(
+            config_file=Path(config_file) if config_file else None,
+            start_dir=input_path.parent,
+            cli_overrides=cli_overrides,
+        )
+
+        # Convert Markdown to Typst
+        text = input_path.read_text()
+        typst_source = convert_with_config(text, config)
+
+        # Write to a temporary .typ file and compile to PDF
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".typ", dir=input_path.parent, delete=True
+        ) as tmp:
+            tmp.write(typst_source)
+            tmp.flush()
+
+            result = subprocess.run(  # noqa: S603
+                ["typst", "compile", tmp.name, str(output_path)],  # noqa: S607
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        if result.returncode != 0:
+            click.echo(f"typst compile failed:\n{result.stderr}", err=True)
+            sys.exit(result.returncode)
 
     cli()

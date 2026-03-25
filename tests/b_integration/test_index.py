@@ -6,6 +6,7 @@ import pytest
 
 from md2typst.ast import IndexEntry
 from md2typst.generator import generate_typst
+from md2typst.parsers.markdown_it import MarkdownItParser
 
 pytestmark = pytest.mark.integration
 
@@ -16,7 +17,6 @@ class TestMarkdownItIndexEntries:
     @pytest.fixture
     def parser(self):
         """Create a markdown-it parser with attrs plugin enabled."""
-        from md2typst.parsers.markdown_it import MarkdownItParser
 
         p = MarkdownItParser()
         p.load_plugin("mdit_py_plugins.attrs")
@@ -82,7 +82,6 @@ class TestIndexEntryWithoutPlugin:
 
     def test_index_syntax_without_plugin(self):
         """Without attrs plugin, index syntax should remain as plain text."""
-        from md2typst.parsers.markdown_it import MarkdownItParser
 
         parser = MarkdownItParser()
         # No attrs plugin loaded

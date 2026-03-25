@@ -5,6 +5,7 @@ This module provides a registry and factory for Markdown parsers.
 
 from __future__ import annotations
 
+import importlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -43,8 +44,6 @@ def get_parser(name: str | None = None) -> MarkdownParser:
         raise ValueError(msg)
 
     module_path = _PARSERS[name]
-
-    import importlib
 
     module = importlib.import_module(module_path)
     return module.create_parser()

@@ -6,6 +6,8 @@ import pytest
 
 from md2typst.ast import MathBlock, MathInline
 from md2typst.generator import generate_typst
+from md2typst.parsers.markdown_it import MarkdownItParser
+from md2typst.parsers.mistune import MistuneParser
 
 pytestmark = pytest.mark.integration
 
@@ -16,7 +18,6 @@ class TestMarkdownItMath:
     @pytest.fixture
     def parser(self):
         """Create a markdown-it parser with dollarmath plugin enabled."""
-        from md2typst.parsers.markdown_it import MarkdownItParser
 
         p = MarkdownItParser()
         p.load_plugin("mdit_py_plugins.dollarmath")
@@ -75,7 +76,6 @@ class TestMistuneMath:
     @pytest.fixture
     def parser(self):
         """Create a mistune parser with math plugin enabled."""
-        from md2typst.parsers.mistune import MistuneParser
 
         p = MistuneParser()
         p.load_plugin("math")
@@ -118,7 +118,6 @@ class TestMathWithoutPlugin:
 
     def test_math_syntax_without_plugin_markdown_it(self):
         """Without dollarmath plugin, $ should be literal."""
-        from md2typst.parsers.markdown_it import MarkdownItParser
 
         parser = MarkdownItParser()
         # No dollarmath plugin loaded
@@ -130,7 +129,6 @@ class TestMathWithoutPlugin:
 
     def test_math_syntax_without_plugin_mistune(self):
         """Without math plugin, $ should be literal."""
-        from md2typst.parsers.mistune import MistuneParser
 
         parser = MistuneParser()
         # No math plugin loaded

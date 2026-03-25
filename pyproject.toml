@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 md2typst = "md2typst:main"
+md2pdf = "md2typst:main_pdf"
 
 [dependency-groups]
 dev = [

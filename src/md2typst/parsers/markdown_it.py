@@ -6,6 +6,7 @@ converting its token stream to our AST representation.
 
 from __future__ import annotations
 
+import importlib
 from typing import TYPE_CHECKING, Any
 
 from markdown_it import MarkdownIt
@@ -39,6 +40,7 @@ from md2typst.ast import (
     Text,
     ThematicBreak,
 )
+from md2typst.frontmatter import extract_frontmatter
 
 from .base import MarkdownParser
 
@@ -94,8 +96,6 @@ class MarkdownItParser(MarkdownParser):
         Special handling for certain plugins:
             - 'mdit_py_plugins.attrs': Enables spans=True by default for index entries
         """
-        import importlib
-
         module = importlib.import_module(plugin)
 
         # Special handling for attrs plugin to enable span parsing
@@ -131,8 +131,6 @@ class MarkdownItParser(MarkdownParser):
 
         Extracts YAML front matter if present, then parses the remaining content.
         """
-        from md2typst.frontmatter import extract_frontmatter
-
         metadata, text = extract_frontmatter(text)
         tokens = self._md.parse(text)
         return self._convert_document(tokens, metadata)

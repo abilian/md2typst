@@ -1,6 +1,10 @@
 """End-to-end integration tests."""
+# ruff: noqa: S603, S607
 
 from __future__ import annotations
+
+import shutil
+import subprocess
 
 import pytest
 
@@ -153,3 +157,166 @@ class TestParserSelection:
     def test_invalid_parser(self):
         with pytest.raises(ValueError, match="Unknown parser"):
             convert("Hello", parser="nonexistent")
+
+
+class TestMd2Pdf:
+    """Test the md2pdf CLI command."""
+
+    @pytest.fixture
+    def has_typst(self):
+        """Skip tests if typst is not installed."""
+        if not shutil.which("typst"):
+            pytest.skip("typst CLI not installed")
+
+    def test_md2pdf_basic(self, tmp_path, has_typst):
+        """Test basic Markdown to PDF conversion."""
+        md_file = tmp_path / "test.md"
+        md_file.write_text("# Hello\n\nWorld.\n")
+        pdf_file = tmp_path / "test.pdf"
+
+        result = subprocess.run(
+            ["uv", "run", "md2pdf", str(md_file)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, f"md2pdf failed: {result.stderr}"
+        assert pdf_file.exists()
+        assert pdf_file.stat().st_size > 0
+
+    def test_md2pdf_custom_output(self, tmp_path, has_typst):
+        """Test md2pdf with custom output path."""
+        md_file = tmp_path / "input.md"
+        md_file.write_text("# Title\n\nContent.\n")
+        pdf_file = tmp_path / "custom.pdf"
+
+        result = subprocess.run(
+            ["uv", "run", "md2pdf", str(md_file), "-o", str(pdf_file)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, f"md2pdf failed: {result.stderr}"
+        assert pdf_file.exists()
+
+    def test_md2pdf_with_preamble(self, tmp_path, has_typst):
+        """Test md2pdf with front matter preamble."""
+        md_file = tmp_path / "preamble.md"
+        md_file.write_text("""---
+preamble: |
+  #set text(lang: "fr")
+  #set par(justify: true)
+---
+
+# Bonjour
+
+Contenu du document.
+""")
+        pdf_file = tmp_path / "preamble.pdf"
+
+        result = subprocess.run(
+            ["uv", "run", "md2pdf", str(md_file)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, f"md2pdf failed: {result.stderr}"
+        assert pdf_file.exists()
+
+    def test_md2pdf_no_temp_file_left(self, tmp_path, has_typst):
+        """Test that no temporary .typ file is left behind."""
+        md_file = tmp_path / "clean.md"
+        md_file.write_text("# Clean\n\nNo temp files.\n")
+
+        subprocess.run(
+            ["uv", "run", "md2pdf", str(md_file)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        typ_files = list(tmp_path.glob("*.typ"))
+        assert typ_files == [], f"Temporary .typ files left behind: {typ_files}"
+
+
+class TestPreambleConversion:
+    """Test preamble front matter in conversion."""
+
+    def test_preamble_set_rules(self):
+        """Test preamble with #set rules."""
+        md = """---
+preamble: |
+  #set text(lang: "fr", hyphenate: true)
+  #set par(justify: true)
+---
+
+# Hello
+"""
+        result = convert(md)
+        assert '#set text(lang: "fr", hyphenate: true)' in result
+        assert "#set par(justify: true)" in result
+        assert "= Hello" in result
+
+    def test_preamble_show_rules(self):
+        """Test preamble with #show rules."""
+        md = """---
+preamble: |
+  #show heading.where(level: 1): it => { it; v(0.5em) }
+  #show heading.where(level: 2): set text(size: 18pt)
+---
+
+# Title
+
+## Section
+"""
+        result = convert(md)
+        assert "#show heading.where(level: 1)" in result
+        assert "#show heading.where(level: 2)" in result
+
+    def test_preamble_not_a_variable(self):
+        """Test that preamble key is not emitted as a #let variable."""
+        md = """---
+title: Test
+preamble: |
+  #set page(margin: 2cm)
+---
+
+Content
+"""
+        result = convert(md)
+        assert "doc-preamble" not in result
+        assert '#let doc-title = "Test"' in result
+        assert "#set page(margin: 2cm)" in result
+
+    def test_preamble_ordering(self):
+        """Test that preamble comes after imports but before content."""
+        md = """---
+title: Test
+stylesheet: mystyle
+preamble: |
+  #set page(margin: 2cm)
+---
+
+# Content
+"""
+        result = convert(md)
+        var_pos = result.find("#let doc-title")
+        import_pos = result.find("#import")
+        preamble_pos = result.find("#set page(margin: 2cm)")
+        content_pos = result.find("= Content")
+
+        assert var_pos < import_pos
+        assert import_pos < preamble_pos
+        assert preamble_pos < content_pos
+
+    def test_empty_preamble(self):
+        """Test that empty preamble is ignored."""
+        md = """---
+title: Test
+preamble: ""
+---
+
+# Hello
+"""
+        result = convert(md)
+        assert '#let doc-title = "Test"' in result
+        assert "= Hello" in result

@@ -5,6 +5,9 @@ Run with: pytest -m benchmark tests/d_benchmark/
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from md2typst import convert
@@ -147,7 +150,7 @@ class TestSpecificOperations:
     def test_tables(self, benchmark, parser_name):
         """Benchmark table parsing."""
         header = "| A | B | C |\n|---|---|---|\n"
-        rows = "\n".join([f"| {i} | {i*2} | {i*3} |" for i in range(50)])
+        rows = "\n".join([f"| {i} | {i * 2} | {i * 3} |" for i in range(50)])
         doc = header + rows
         benchmark(convert, doc, parser=parser_name)
 
@@ -195,9 +198,6 @@ def generate_report():
         pytest tests/test_benchmark.py --benchmark-json=benchmark.json
         python -c "from tests.test_benchmark import generate_report; generate_report()"
     """
-    import json
-    from pathlib import Path
-
     benchmark_file = Path("benchmark.json")
     if not benchmark_file.exists():
         print("No benchmark.json found. Run benchmarks with --benchmark-json first.")
