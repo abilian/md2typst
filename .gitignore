@@ -14,3 +14,4 @@ wheels/
 
 # Local / secret
 .envrc          
+sandbox
