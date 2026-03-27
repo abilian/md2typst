@@ -205,7 +205,10 @@ def main_pdf() -> None:
     @click.command()
     @click.argument("input", type=click.Path(exists=True))
     @click.option(
-        "-o", "--output", type=click.Path(), help="Output PDF file (default: input with .pdf extension)"
+        "-o",
+        "--output",
+        type=click.Path(),
+        help="Output PDF file (default: input with .pdf extension)",
     )
     @click.option("-p", "--parser", default=None, help="Parser to use")
     @click.option(
