@@ -346,7 +346,7 @@ class TestBreaks:
             ]
         )
         result = generate_typst(doc)
-        assert "Line 1\nLine 2" in result
+        assert "Line 1 \\\nLine 2" in result
 
     def test_hard_break(self):
         doc = Document(

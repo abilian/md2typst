@@ -502,8 +502,12 @@ class TypstGenerator:
         return f'#image("{url}")'
 
     def visit_SoftBreak(self, node: SoftBreak) -> str:
-        """Convert soft break - typically just a space or newline."""
-        return "\n"
+        """Convert soft break to Typst linebreak.
+
+        In Typst, a single newline within a paragraph is treated as a space.
+        We emit \\ + newline to preserve the line break from the source.
+        """
+        return " \\\n"
 
     def visit_HardBreak(self, node: HardBreak) -> str:
         """Convert hard break to Typst.
