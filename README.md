@@ -6,7 +6,11 @@ A robust Markdown to [Typst](https://typst.app/) converter in Python with suppor
 
 - **Multiple parser backends**: Choose from markdown-it-py, mistune, or marko at runtime
 - **GFM support**: Tables, strikethrough, and other GitHub Flavored Markdown extensions
-- **Configurable**: TOML configuration files and CLI options
+- **Math support**: `$...$` and `$$...$$` rendered via [mitex](https://typst.app/universe/package/mitex/), enabled by default
+- **Mermaid diagrams**: ` ```mermaid ` code blocks rendered via [mmdr](https://typst.app/universe/package/mmdr/)
+- **Auto-imports**: Required Typst packages are automatically imported based on content
+- **Direct PDF output**: `md2pdf` command converts Markdown to PDF in one step (requires `typst` CLI)
+- **Configurable**: TOML configuration files, CLI options, and YAML front matter
 - **Extensible**: Plugin support for parser-specific extensions
 - **Well-tested**: Comprehensive test suite with TCK validation against CommonMark
 
@@ -25,10 +29,16 @@ uv add md2typst
 ### Command Line
 
 ```bash
-# Convert a file
+# Convert a file (writes input.typ by default)
+md2typst input.md
+
+# Explicit output path
 md2typst input.md -o output.typ
 
-# Convert from stdin
+# Output to stdout
+md2typst input.md -o -
+
+# Convert from stdin (outputs to stdout)
 echo "# Hello **World**" | md2typst
 
 # Use a specific parser
@@ -88,8 +98,11 @@ All parsers have GFM extensions (tables, strikethrough) enabled by default.
 | `[text](url)` | `#link("url")[text]` |
 | `![alt](url)` | `#image("url", alt: "alt")` |
 | `> quote` | `#block(...)[quote]` |
+| `$E=mc^2$` | `#mi("E=mc^2")` |
+| `$$...\int...$$` | `#mitex(\`...\`)` |
 | `---` | `#line(length: 100%)` |
 | GFM tables | `#table(...)` |
+| ` ```mermaid ` | `#mermaid("...")` |
 
 ## Configuration
 
@@ -151,7 +164,33 @@ This generates:
 = Hello World
 ```
 
-The output ordering is: variables, stylesheet imports, preamble, then content.
+The output ordering is: variables, stylesheet imports, package imports, preamble, then content.
+
+### Math
+
+Dollar-sign math syntax is enabled by default (markdown-it and mistune parsers). The [mitex](https://typst.app/universe/package/mitex/) package import is added automatically when math is detected.
+
+```markdown
+Inline: $E = mc^2$
+
+Display:
+$$
+\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+$$
+```
+
+### Mermaid Diagrams
+
+Fenced code blocks with language `mermaid` are converted to native Typst diagrams using the [mmdr](https://typst.app/universe/package/mmdr/) package. The import is added automatically.
+
+````markdown
+```mermaid
+graph LR
+    A[Start] --> B{Decision}
+    B -->|Yes| C[OK]
+    B -->|No| D[End]
+```
+````
 
 ### CLI Options
 
@@ -159,7 +198,7 @@ The output ordering is: variables, stylesheet imports, preamble, then content.
 md2typst --help
 
 Options:
-  -o, --output FILE      Output file (default: stdout)
+  -o, --output FILE      Output file (default: <input>.typ, or stdout for stdin)
   -p, --parser NAME      Parser to use (markdown-it, mistune, marko)
   --plugin NAME          Load parser plugin (can be repeated)
   --stylesheet NAME      Import Typst stylesheet (can be repeated)
