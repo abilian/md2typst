@@ -23,8 +23,8 @@ Issues = "https://github.com/abilian/md2typst/issues"
 Changelog = "https://github.com/abilian/md2typst/blob/main/CHANGES.md"
 
 [project.scripts]
-md2typst = "md2typst:main"
-md2pdf = "md2typst:main_pdf"
+md2typst = "md2typst.cli:main"
+md2pdf = "md2typst.cli:main_pdf"
 
 [dependency-groups]
 dev = [
