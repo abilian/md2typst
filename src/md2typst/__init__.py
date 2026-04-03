@@ -190,9 +190,17 @@ def main() -> None:
 
         result = convert_with_config(text, config)
 
-        if output:
+        # Default output: <input>.typ for file input, stdout for stdin
+        if output == "-":
+            click.echo(result)
+        elif output:
             with Path(output).open("w") as f:
                 f.write(result)
+        elif input and input != "-":
+            out_path = Path(input).with_suffix(".typ")
+            with out_path.open("w") as f:
+                f.write(result)
+            click.echo(f"Wrote {out_path}", err=True)
         else:
             click.echo(result)
 
