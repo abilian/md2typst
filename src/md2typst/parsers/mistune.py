@@ -28,6 +28,7 @@ from md2typst.ast import (
     ListItem,
     MathBlock,
     MathInline,
+    MermaidBlock,
     Node,
     Paragraph,
     SoftBreak,
@@ -50,9 +51,11 @@ class MistuneParser(MarkdownParser):
     """Parser adapter for mistune."""
 
     def __init__(self, gfm: bool = True) -> None:
-        plugins = GFM_PLUGINS if gfm else []
+        plugins = list(GFM_PLUGINS) if gfm else []
+        if "math" not in plugins:
+            plugins.append("math")
         self._md = mistune.create_markdown(renderer=None, plugins=plugins)
-        self._plugins = list(plugins)
+        self._plugins = plugins
 
     @property
     def name(self) -> str:
@@ -148,6 +151,8 @@ class MistuneParser(MarkdownParser):
         if token_type in ("code_block", "block_code"):
             info = token.get("attrs", {}).get("info")
             raw = token.get("raw", "")
+            if info == "mermaid":
+                return MermaidBlock(code=raw)
             return CodeBlock(code=raw, language=info or None)
 
         if token_type == "block_quote":

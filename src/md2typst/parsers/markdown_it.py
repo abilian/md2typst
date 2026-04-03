@@ -30,6 +30,7 @@ from md2typst.ast import (
     ListItem,
     MathBlock,
     MathInline,
+    MermaidBlock,
     Node,
     Paragraph,
     SoftBreak,
@@ -55,6 +56,7 @@ class MarkdownItParser(MarkdownParser):
         self._md = MarkdownIt("commonmark")
         if gfm:
             self._enable_gfm()
+        self._enable_math()
 
     @property
     def name(self) -> str:
@@ -64,6 +66,12 @@ class MarkdownItParser(MarkdownParser):
         """Enable GFM extensions (tables, strikethrough)."""
         self._md.enable("table")
         self._md.enable("strikethrough")
+
+    def _enable_math(self) -> None:
+        """Enable math support (dollarmath plugin)."""
+        from mdit_py_plugins.dollarmath import dollarmath_plugin
+
+        self._md.use(dollarmath_plugin)
 
     def configure(self, options: dict[str, Any]) -> None:
         """Configure the parser.
@@ -170,7 +178,10 @@ class MarkdownItParser(MarkdownParser):
 
             elif token.type == "fence":
                 lang = token.info.strip() if token.info else None
-                nodes.append(CodeBlock(code=token.content, language=lang))
+                if lang == "mermaid":
+                    nodes.append(MermaidBlock(code=token.content))
+                else:
+                    nodes.append(CodeBlock(code=token.content, language=lang))
                 i += 1
 
             elif token.type == "code_block":

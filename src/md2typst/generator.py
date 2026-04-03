@@ -32,6 +32,7 @@ from .ast import (
     ListItem,
     MathBlock,
     MathInline,
+    MermaidBlock,
     Paragraph,
     SoftBreak,
     Strikethrough,
@@ -138,6 +139,11 @@ class TypstGenerator:
             imports = self._generate_stylesheet_imports_list(all_stylesheets)
             prepended.append(imports)
 
+        # Auto-import packages required by AST node types
+        pkg_imports = self._detect_package_imports(doc)
+        if pkg_imports:
+            prepended.append("\n".join(pkg_imports))
+
         # Add preamble (raw Typst code from front matter)
         if preamble and isinstance(preamble, str):
             prepended.append(preamble.strip())
@@ -178,6 +184,31 @@ class TypstGenerator:
             name = stylesheet if stylesheet.endswith(".typ") else f"{stylesheet}.typ"
             lines.append(f'#import "{name}": *')
         return "\n".join(lines)
+
+    # Map of AST node types to required Typst package imports
+    _PACKAGE_IMPORTS: ClassVar[dict[type, str]] = {
+        MathInline: '#import "@preview/mitex:0.2.6": *',
+        MathBlock: '#import "@preview/mitex:0.2.6": *',
+        MermaidBlock: '#import "@preview/mmdr:0.2.1": mermaid',
+    }
+
+    def _detect_package_imports(self, doc: Document) -> list[str]:
+        """Scan AST for node types that require Typst package imports."""
+        needed: set[str] = set()
+        self._scan_nodes(doc.children, needed)
+        # Return in stable order
+        return sorted(needed)
+
+    def _scan_nodes(self, nodes: tuple[Node, ...] | object, needed: set[str]) -> None:
+        """Recursively scan nodes for types requiring package imports."""
+        if not isinstance(nodes, tuple):
+            return
+        for node in nodes:
+            import_stmt = self._PACKAGE_IMPORTS.get(type(node))
+            if import_stmt:
+                needed.add(import_stmt)
+            if hasattr(node, "children"):
+                self._scan_nodes(node.children, needed)
 
     # Reserved front matter keys that have special handling
     RESERVED_FRONTMATTER_KEYS: ClassVar[set[str]] = {
@@ -630,6 +661,18 @@ class TypstGenerator:
             delim = "`" * (max_ticks + 1)
             return f"#mitex({delim}{content}{delim})"
         return f"#mitex(`{content}`)"
+
+    def visit_MermaidBlock(self, node: MermaidBlock) -> str:
+        """Convert Mermaid diagram block to Typst.
+
+        Uses the mmdr package for native Typst rendering.
+        Markdown: ```mermaid ... ```
+        Typst: #mermaid("...")
+
+        Requires: #import "@preview/mmdr:0.2.1": mermaid
+        """
+        content = escape_typst_string(node.code.strip())
+        return f'#mermaid("{content}")'
 
 
 def generate_typst(

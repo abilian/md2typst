@@ -333,6 +333,28 @@ class MathBlock(Node):
 
 
 @dataclass(frozen=True)
+class MermaidBlock(Node):
+    """A Mermaid diagram block.
+
+    Example Markdown:
+        ```mermaid
+        graph TD; A-->B;
+        ```
+
+    Example Typst output:
+        #mermaid("graph TD; A-->B;")
+
+    Requires: #import "@preview/mmdr:0.2.1": mermaid
+    """
+
+    code: str  # Mermaid diagram source
+
+    def __str__(self) -> str:
+        lines = self.code.count("\n") + 1
+        return f"MermaidBlock({lines} lines)"
+
+
+@dataclass(frozen=True)
 class IndexEntry(Node):
     """An index entry marker for document indexing.
 

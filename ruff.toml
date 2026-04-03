@@ -27,6 +27,8 @@ lint.extend-ignore = [
     "C901",   # complex-structure (parser functions are inherently complex)
     "ANN401", # any-type (needed for external library types)
     "B027",   # empty-method-without-abstract-decorator (intentional default impl)
+    # Non-top imports
+    "PLC0415",
 ]
 
 [lint.isort]

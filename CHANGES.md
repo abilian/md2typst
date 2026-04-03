@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-04-03
+
+### Added
+
+- **Mermaid diagram support**: ```` ```mermaid ```` code blocks are converted to `#mermaid("...")` calls using the [mmdr](https://typst.app/universe/package/mmdr/) Typst package
+  - Supported by all three parsers (markdown-it, mistune, marko)
+  - New `MermaidBlock` AST node
+  - Package import (`#import "@preview/mmdr:0.2.1": mermaid`) is auto-generated when Mermaid blocks are present
+
+- **Auto-import of Typst packages**: Required package imports are now automatically prepended based on AST content
+  - `mitex` for math expressions (`MathInline`, `MathBlock`)
+  - `mmdr` for Mermaid diagrams (`MermaidBlock`)
+
+- **Math enabled by default**: Dollar-sign math syntax (`$...$` and `$$...$$`) is now parsed out of the box
+  - markdown-it: dollarmath plugin loaded automatically
+  - mistune: math plugin loaded automatically
+  - marko: not supported (no math extension)
+
+### Fixed
+
+- **Updated mitex package** from 0.2.0 to 0.2.6, fixing `duplicate key: int` error at compile time
+
 ## [0.2.5] - 2026-04-03
 
 ### Changed

@@ -1,6 +1,6 @@
 [project]
 name = "md2typst"
-version = "0.2.5"
+version = "0.3.0"
 description = "Markdown to Typst converter with multiple parser support"
 readme = "README.md"
 authors = [
@@ -28,19 +28,22 @@ md2pdf = "md2typst.cli:main_pdf"
 
 [dependency-groups]
 dev = [
+    # Test
     "pytest>=8.0.0",
     "pytest-cov>=4.0.0",
     "pytest-benchmark>=4.0.0",
     "hypothesis>=6.0.0",
-    "pyyaml>=6.0.0",
+    "nox>=2026.2.9",
+    # Lint / typecheck
+    "types-pyyaml>=6.0.12.20250915",
+    "ruff>=0.15.9",
     "ty>=0.0.8",
     "pyrefly>=0.46.3",
     "mypy>=1.19.1",
-    "mdit-py-plugins>=0.4.0",
-    "types-pyyaml>=6.0.12.20250915",
-    "ruff>=0.15.9",
-    "nox>=2026.2.9",
     "pre-commit>=4.5.1",
+    # Misc
+    "pyyaml>=6.0.0",
+    "mdit-py-plugins>=0.4.0",
 ]
 
 [build-system]

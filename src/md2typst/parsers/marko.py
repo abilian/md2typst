@@ -30,6 +30,7 @@ from md2typst.ast import (
     Link,
     List,
     ListItem,
+    MermaidBlock,
     Node,
     Paragraph,
     SoftBreak,
@@ -118,8 +119,9 @@ class MarkoParser(MarkdownParser):
 
         if isinstance(element, marko_block.FencedCode):
             lang = element.lang or None
-            # Get the raw code content
             code = self._get_raw_text(element.children)
+            if lang == "mermaid":
+                return MermaidBlock(code=code)
             return CodeBlock(code=code, language=lang)
 
         if isinstance(element, marko_block.CodeBlock):
