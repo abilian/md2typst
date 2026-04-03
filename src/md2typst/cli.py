@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import tempfile
+from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,7 @@ from md2typst.config import load_config
 from md2typst.converter import convert_with_config
 from md2typst.parsers import list_parsers as get_available_parsers
 
-__version__ = "0.2.4"
+__version__ = version("md2typst")
 
 
 def main() -> None:
