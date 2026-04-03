@@ -20,8 +20,8 @@ def tests(session: nox.Session):
 def check(session: nox.Session):
     """Run all checks (lint, typecheck, tests)."""
     uv_sync(session)
-    session.run("ruff", "check")
-    session.run("ruff", "format", "--check")
+    session.run("ruff", "check", "src")
+    session.run("ruff", "format", "--check", "src")
     session.run("ty", "check", "src")
     # session.run("pyrefly", "check", "src")
     # session.run("mypy", "src")
