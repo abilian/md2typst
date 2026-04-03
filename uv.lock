@@ -298,12 +298,13 @@ wheels = [
 
 [[package]]
 name = "md2typst"
-version = "0.3.0"
+version = "0.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
     { name = "markdown-it-py" },
     { name = "marko" },
+    { name = "mdit-py-plugins" },
     { name = "mistune" },
     { name = "pyyaml" },
 ]
@@ -311,7 +312,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "hypothesis" },
-    { name = "mdit-py-plugins" },
     { name = "mypy" },
     { name = "nox" },
     { name = "pre-commit" },
@@ -319,7 +319,6 @@ dev = [
     { name = "pytest" },
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
-    { name = "pyyaml" },
     { name = "ruff" },
     { name = "ty" },
     { name = "types-pyyaml" },
@@ -330,6 +329,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
     { name = "markdown-it-py", specifier = ">=3.0.0" },
     { name = "marko", specifier = ">=2.0.0" },
+    { name = "mdit-py-plugins", specifier = ">=0.4.0" },
     { name = "mistune", specifier = ">=3.0.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },
 ]
@@ -337,7 +337,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "hypothesis", specifier = ">=6.0.0" },
-    { name = "mdit-py-plugins", specifier = ">=0.4.0" },
     { name = "mypy", specifier = ">=1.19.1" },
     { name = "nox", specifier = ">=2026.2.9" },
     { name = "pre-commit", specifier = ">=4.5.1" },
@@ -345,7 +344,6 @@ dev = [
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-benchmark", specifier = ">=4.0.0" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "ruff", specifier = ">=0.15.9" },
     { name = "ty", specifier = ">=0.0.8" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },

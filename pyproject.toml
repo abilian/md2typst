@@ -1,6 +1,6 @@
 [project]
 name = "md2typst"
-version = "0.3.0"
+version = "0.3.1"
 description = "Markdown to Typst converter with multiple parser support"
 readme = "README.md"
 authors = [
@@ -8,8 +8,9 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "markdown-it-py>=3.0.0",
     "click>=8.0.0",
+    "markdown-it-py>=3.0.0",
+    "mdit-py-plugins>=0.4.0",
     "mistune>=3.0.0",
     "marko>=2.0.0",
     "pyyaml>=6.0.0",
@@ -41,9 +42,6 @@ dev = [
     "pyrefly>=0.46.3",
     "mypy>=1.19.1",
     "pre-commit>=4.5.1",
-    # Misc
-    "pyyaml>=6.0.0",
-    "mdit-py-plugins>=0.4.0",
 ]
 
 [build-system]
