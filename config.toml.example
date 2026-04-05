@@ -1,0 +1,19 @@
+# md2typst user config
+# Applied to every document converted via `md2typst` or `md2pdf`.
+# Fields here can be overridden by project-level `md2typst.toml`, by
+# front matter in the document, or by CLI flags.
+
+[style]
+# Paragraphs: justified, with a modest first-line indent and tighter leading.
+# Heading sizes scaled up in em units so they track the body font size.
+preamble = """
+#set par(justify: true, leading: 0.65em)
+
+#show heading.where(level: 1): set text(size: 2.0em)
+#show heading.where(level: 2): set text(size: 1.6em)
+#show heading.where(level: 3): set text(size: 1.3em)
+#show heading.where(level: 4): set text(size: 1.15em)
+#show heading.where(level: 5): set text(size: 1.05em)
+
+#show heading: it => { it; v(0.4em) }
+"""

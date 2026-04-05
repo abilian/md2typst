@@ -108,20 +108,56 @@ All parsers have GFM extensions (tables, strikethrough) enabled by default.
 
 Configuration is loaded from multiple sources (highest priority first):
 
-1. CLI arguments (`--parser`, `--plugin`)
-2. Explicit config file (`--config path/to/config.toml`)
-3. `.md2typst.toml` in the current or parent directories
-4. `[tool.md2typst]` section in `pyproject.toml`
+1. CLI arguments (`--parser`, `--plugin`, ...)
+2. Front matter in the document
+3. Explicit config file (`--config path/to/config.toml`)
+4. `md2typst.toml` in the current or parent directories
+5. `[tool.md2typst]` section in `pyproject.toml`
+6. User config at `~/.config/md2typst/config.toml` (platform-specific via `platformdirs`)
+7. Built-in defaults
+
+### Styling with `[style]`
+
+The `[style]` section customizes Typst's default output. Set your preferred font, language, and page layout **once** in your user config — applied to every document you convert.
+
+**`~/.config/md2typst/config.toml`**:
+```toml
+[style]
+# Font as single string or a fallback list
+font = ["Libertinus Serif", "New Computer Modern", "Times New Roman"]
+font_size = "11pt"
+language = "en"
+paper = "a4"
+margin = "2.5cm"
+
+# Raw Typst code appended after structured fields
+preamble = """
+#set par(justify: true, first-line-indent: 1em)
+#show heading.where(level: 1): it => { it; v(0.5em) }
+"""
+```
+
+This generates at the top of every converted document:
+```typst
+#set text(font: ("Libertinus Serif", "New Computer Modern", "Times New Roman"), size: 11pt, lang: "en")
+#set page(paper: "a4", margin: 2.5cm)
+
+#set par(justify: true, first-line-indent: 1em)
+#show heading.where(level: 1): it => { it; v(0.5em) }
+```
 
 ### Example Configuration
 
-**.md2typst.toml**:
+**md2typst.toml** (project-level, overrides user config):
 ```toml
 parser = "mistune"
 plugins = ["strikethrough", "table"]
 
 [parser_options]
 html = true
+
+[style]
+language = "fr"
 ```
 
 **pyproject.toml**:
@@ -133,15 +169,20 @@ plugins = ["gfm"]
 
 ### Front Matter
 
-Markdown files can include YAML front matter for metadata, stylesheets, and raw Typst preamble:
+Markdown files can include YAML front matter. Any field is exposed as a `#let doc-<key>` variable in Typst, **except** reserved keys with special handling:
+
+- `preamble` — raw Typst code, concatenated with config `style.preamble`
+- `stylesheet` / `stylesheets` — additional Typst modules to import
+- `font`, `font_size`, `language`, `paper`, `margin` — override the corresponding `[style]` fields at document level
 
 ```markdown
 ---
 title: My Document
 author: Jane Doe
+language: fr          # overrides config style.language
+font: EB Garamond     # overrides config style.font
 stylesheet: my-style
 preamble: |
-  #set text(lang: "fr", hyphenate: true)
   #set par(justify: true)
   #show heading.where(level: 1): it => { it; v(0.5em) }
 ---
@@ -157,14 +198,15 @@ This generates:
 
 #import "my-style.typ": *
 
-#set text(lang: "fr", hyphenate: true)
+#set text(font: "EB Garamond", lang: "fr")
+
 #set par(justify: true)
 #show heading.where(level: 1): it => { it; v(0.5em) }
 
 = Hello World
 ```
 
-The output ordering is: variables, stylesheet imports, package imports, preamble, then content.
+The output ordering is: variables, stylesheet imports, package imports, `#set` directives from `[style]`, preamble, then content.
 
 ### Math
 

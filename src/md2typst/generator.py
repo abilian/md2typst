@@ -8,7 +8,9 @@ This module converts the parser-agnostic AST to Typst source code.
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
+
+from .config import Style
 
 if TYPE_CHECKING:
     from .ast import Node
@@ -64,6 +66,7 @@ class TypstGenerator:
         self,
         note_style: str = "footnote",
         stylesheets: list[str] | None = None,
+        style: Style | None = None,
     ) -> None:
         """Initialize the generator.
 
@@ -72,12 +75,14 @@ class TypstGenerator:
                 - "footnote": Inline footnotes using Typst's #footnote[]
                 - "endnote": Superscript numbers with notes collected at end
             stylesheets: List of Typst stylesheet modules to import.
+            style: Typst styling options (font, language, page, preamble).
         """
         self._indent_level = 0
         self._in_list = False
         self._footnotes: dict[str, FootnoteDef] = {}
         self._note_style = note_style
         self._stylesheets = stylesheets or []
+        self._style = style or Style()
         # Track endnote references in order for numbering
         self._endnote_refs: list[str] = []
 
@@ -112,11 +117,11 @@ class TypstGenerator:
         # Prepend front matter variables, stylesheet imports, and preamble
         prepended: list[str] = []
 
-        # Extract preamble and stylesheets from metadata (if present)
-        preamble = ""
+        # Extract front matter preamble and stylesheets (if present)
+        fm_preamble = ""
         extra_stylesheets: list[str] = []
         if doc.metadata:
-            preamble = doc.metadata.get("preamble", "")
+            fm_preamble = doc.metadata.get("preamble", "") or ""
             # Support both 'stylesheet' (single) and 'stylesheets' (list) in front matter
             fm_stylesheet = doc.metadata.get("stylesheet")
             fm_stylesheets = doc.metadata.get("stylesheets", [])
@@ -126,6 +131,9 @@ class TypstGenerator:
                 extra_stylesheets.extend(fm_stylesheets)
             elif fm_stylesheets:
                 extra_stylesheets.append(str(fm_stylesheets))
+
+        # Compute effective style (front matter overrides config style)
+        effective_style = self._effective_style(doc.metadata)
 
         # Generate front matter variables (excluding reserved keys)
         if doc.metadata:
@@ -144,9 +152,19 @@ class TypstGenerator:
         if pkg_imports:
             prepended.append("\n".join(pkg_imports))
 
-        # Add preamble (raw Typst code from front matter)
-        if preamble and isinstance(preamble, str):
-            prepended.append(preamble.strip())
+        # Emit #set text / #set page directives from effective style
+        style_directives = self._generate_style_directives(effective_style)
+        if style_directives:
+            prepended.append(style_directives)
+
+        # Merged preamble: config-level style.preamble + front matter preamble
+        merged_preamble_parts: list[str] = []
+        if effective_style.preamble:
+            merged_preamble_parts.append(effective_style.preamble.strip())
+        if fm_preamble and isinstance(fm_preamble, str):
+            merged_preamble_parts.append(fm_preamble.strip())
+        if merged_preamble_parts:
+            prepended.append("\n".join(merged_preamble_parts))
 
         if prepended:
             result = "\n\n".join(prepended) + "\n\n" + result
@@ -210,12 +228,64 @@ class TypstGenerator:
             if hasattr(node, "children"):
                 self._scan_nodes(node.children, needed)
 
+    def _effective_style(self, metadata: dict | None) -> Style:
+        """Compute the effective Style by merging front matter over config.
+
+        Front matter may override style fields: font, font_size, language,
+        paper, margin, and may also include a `preamble` that is concatenated
+        with the config-level preamble.
+        """
+        if not metadata:
+            return self._style
+        overrides: dict[str, Any] = {}
+        for key in self.STYLE_KEYS:
+            if key in metadata:
+                overrides[key] = metadata[key]
+        # Note: front matter `preamble` is merged separately in generate();
+        # we deliberately do NOT fold it into Style here to keep ordering
+        # (config preamble, then front matter preamble).
+        return self._style.merge(overrides) if overrides else self._style
+
+    def _generate_style_directives(self, style: Style) -> str:
+        """Emit #set text(...) and #set page(...) from Style fields.
+
+        Returns an empty string if no style fields are set.
+        """
+        lines: list[str] = []
+
+        text_args: list[str] = []
+        if style.font:
+            if len(style.font) == 1:
+                text_args.append(f'font: "{escape_typst_string(style.font[0])}"')
+            else:
+                fonts = ", ".join(f'"{escape_typst_string(f)}"' for f in style.font)
+                text_args.append(f"font: ({fonts})")
+        if style.font_size:
+            text_args.append(f"size: {style.font_size}")
+        if style.language:
+            text_args.append(f'lang: "{escape_typst_string(style.language)}"')
+        if text_args:
+            lines.append(f"#set text({', '.join(text_args)})")
+
+        page_args: list[str] = []
+        if style.paper:
+            page_args.append(f'paper: "{escape_typst_string(style.paper)}"')
+        if style.margin:
+            page_args.append(f"margin: {style.margin}")
+        if page_args:
+            lines.append(f"#set page({', '.join(page_args)})")
+
+        return "\n".join(lines)
+
     # Reserved front matter keys that have special handling
-    RESERVED_FRONTMATTER_KEYS: ClassVar[set[str]] = {
-        "preamble",
-        "stylesheet",
-        "stylesheets",
-    }
+    # Front matter keys that override Style fields (not emitted as #let vars).
+    STYLE_KEYS: ClassVar[frozenset[str]] = frozenset(
+        {"font", "font_size", "language", "paper", "margin"}
+    )
+
+    RESERVED_FRONTMATTER_KEYS: ClassVar[frozenset[str]] = frozenset(
+        {"preamble", "stylesheet", "stylesheets"}
+    ) | frozenset({"font", "font_size", "language", "paper", "margin"})
 
     def _generate_frontmatter_variables(self, metadata: dict) -> str:
         """Generate Typst variable declarations from front matter.
@@ -679,6 +749,7 @@ def generate_typst(
     doc: Document,
     note_style: str = "footnote",
     stylesheets: list[str] | None = None,
+    style: Style | None = None,
 ) -> str:
     """Convenience function to generate Typst from a Document.
 
@@ -686,6 +757,11 @@ def generate_typst(
         doc: The Document AST to convert.
         note_style: How to render footnotes ("footnote" or "endnote").
         stylesheets: List of Typst stylesheet modules to import.
+        style: Typst styling options (font, language, page, preamble).
     """
-    generator = TypstGenerator(note_style=note_style, stylesheets=stylesheets)
+    generator = TypstGenerator(
+        note_style=note_style,
+        stylesheets=stylesheets,
+        style=style,
+    )
     return generator.generate(doc)

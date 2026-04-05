@@ -298,7 +298,7 @@ wheels = [
 
 [[package]]
 name = "md2typst"
-version = "0.3.1"
+version = "0.4.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -306,6 +306,7 @@ dependencies = [
     { name = "marko" },
     { name = "mdit-py-plugins" },
     { name = "mistune" },
+    { name = "platformdirs" },
     { name = "pyyaml" },
 ]
 
@@ -331,6 +332,7 @@ requires-dist = [
     { name = "marko", specifier = ">=2.0.0" },
     { name = "mdit-py-plugins", specifier = ">=0.4.0" },
     { name = "mistune", specifier = ">=3.0.0" },
+    { name = "platformdirs", specifier = ">=4.0.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },
 ]
 

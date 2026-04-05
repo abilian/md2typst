@@ -89,14 +89,14 @@ class TestFindConfigFile:
     """Test finding configuration files."""
 
     def test_find_in_current_dir(self, tmp_path):
-        config_file = tmp_path / ".md2typst.toml"
+        config_file = tmp_path / "md2typst.toml"
         config_file.write_text('parser = "mistune"\n')
 
         result = find_config_file(tmp_path)
         assert result == config_file
 
     def test_find_in_parent_dir(self, tmp_path):
-        config_file = tmp_path / ".md2typst.toml"
+        config_file = tmp_path / "md2typst.toml"
         config_file.write_text('parser = "mistune"\n')
 
         subdir = tmp_path / "subdir"
@@ -128,10 +128,10 @@ class TestFindConfigFile:
 
 
 class TestLoadConfigFromFile:
-    """Test loading config from .md2typst.toml."""
+    """Test loading config from md2typst.toml."""
 
     def test_load_basic_config(self, tmp_path):
-        config_file = tmp_path / ".md2typst.toml"
+        config_file = tmp_path / "md2typst.toml"
         config_file.write_text("""
 parser = "mistune"
 plugins = ["strikethrough", "table"]
@@ -147,7 +147,7 @@ linkify = false
         assert result["parser_options"]["linkify"] is False
 
     def test_load_empty_config(self, tmp_path):
-        config_file = tmp_path / ".md2typst.toml"
+        config_file = tmp_path / "md2typst.toml"
         config_file.write_text("")
         result = load_config_from_file(config_file)
         assert result == {}
@@ -214,7 +214,7 @@ parser = "marko"
 plugins = ["a"]
 """)
 
-        config_file = tmp_path / ".md2typst.toml"
+        config_file = tmp_path / "md2typst.toml"
         config_file.write_text("""
 parser = "mistune"
 """)
@@ -231,7 +231,7 @@ parser = "mistune"
 parser = "marko"
 """)
 
-        config_file = tmp_path / ".md2typst.toml"
+        config_file = tmp_path / "md2typst.toml"
         config_file.write_text("""
 parser = "mistune"
 """)
@@ -285,7 +285,7 @@ html = true
 linkify = false
 """)
 
-        config_file = tmp_path / ".md2typst.toml"
+        config_file = tmp_path / "md2typst.toml"
         config_file.write_text("""
 [parser_options]
 linkify = true
@@ -348,7 +348,7 @@ class TestConfigIntegration:
 
     def test_output_options_from_toml(self, tmp_path):
         """Test that output_options are loaded from config file."""
-        config_file = tmp_path / ".md2typst.toml"
+        config_file = tmp_path / "md2typst.toml"
         config_file.write_text("""
 [output_options]
 note_style = "endnote"
@@ -384,7 +384,7 @@ class TestStylesheets:
 
     def test_stylesheets_from_config_file(self, tmp_path):
         """Test loading stylesheets from config file."""
-        config_file = tmp_path / ".md2typst.toml"
+        config_file = tmp_path / "md2typst.toml"
         config_file.write_text("""
 stylesheets = ["mystyle", "utils.typ"]
 """)

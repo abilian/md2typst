@@ -78,4 +78,5 @@ def convert_with_config(markdown: str, config: Config) -> str:
         doc,
         note_style=note_style,
         stylesheets=config.stylesheets,
+        style=config.style,
     )

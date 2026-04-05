@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Style configuration system**: New `[style]` section in config files for customizing Typst output defaults
+  - Fields: `font` (string or list for fallback), `font_size`, `language`, `paper`, `margin`, `preamble`
+  - Translated to `#set text(...)` and `#set page(...)` directives automatically
+  - Font fallback lists are emitted as Typst tuples, e.g. `font: ("Libertinus Serif", "New Computer Modern")`
+
+- **User-level config file**: `~/.config/md2typst/config.toml` (via `platformdirs`, cross-platform)
+  - Lowest priority after built-in defaults
+  - Purpose: set your preferred default styling (font, language, page setup) once for all documents
+
+- **Extended cascade ordering** (lowest to highest priority):
+  1. Built-in defaults
+  2. User config (`~/.config/md2typst/config.toml`)
+  3. `pyproject.toml` `[tool.md2typst]`
+  4. `md2typst.toml` (searched up from input)
+  5. Explicit `--config file.toml`
+  6. Front matter in the document
+  7. CLI flags
+
+- **Front matter style overrides**: Style fields can be set directly in YAML front matter
+  - Keys: `font`, `font_size`, `language`, `paper`, `margin`
+  - These override the config `[style]` section at the document level
+  - Config `style.preamble` and front matter `preamble` are concatenated (config first)
+
+### Changed
+
+- **Added `platformdirs` dependency** for cross-platform user config directory discovery
+
 ## [0.3.1] - 2026-04-03
 
 ### Fixed
@@ -164,7 +195,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Strikethrough (`~~text~~`)
 - Configuration system:
   - CLI arguments
-  - TOML config files (`.md2typst.toml`)
+  - TOML config files (`md2typst.toml`)
   - pyproject.toml `[tool.md2typst]` section
 - Comprehensive test suite:
   - Unit tests

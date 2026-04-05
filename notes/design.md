@@ -214,7 +214,7 @@ class Config:
 
 Configuration sources (in priority order):
 1. CLI arguments
-2. Project config file (`.md2typst.toml` or in `pyproject.toml`)
+2. Project config file (`md2typst.toml` or in `pyproject.toml`)
 3. Defaults
 
 ### 5. CLI Interface
