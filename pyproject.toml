@@ -20,7 +20,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/abilian/md2typst"
 Repository = "https://github.com/abilian/md2typst"
-"Source (Sourcehut)" = "https://sr.ht/~sfermigier/md2typst/"
+"Source (Sourcehut)" = "https://git.sr.ht/~sfermigier/md2typst"
 Issues = "https://github.com/abilian/md2typst/issues"
 Changelog = "https://github.com/abilian/md2typst/blob/main/CHANGES.md"
 
