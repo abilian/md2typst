@@ -7,7 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.3] - Unreleased
 
+### Added
+
 - **`[TOC]` support**: A standalone `[TOC]` paragraph is converted to `#outline(indent: auto, depth: 4)` for table of contents generation
+
+- **Document classes** (`article`, `report`, `book`): Named style presets defined in `[classes.<name>]` config sections, inspired by LaTeX document classes
+  - Select via front matter (`class: report`), CLI (`--class report`), or config (`default_class = "article"`)
+  - Class preamble replaces (not concatenates with) the base style preamble; scalar fields (font, paper, etc.) are inherited
+  - **article**: compact layout, inline title block, no page breaks between sections, flat section numbering
+  - **report**: separate title with rule, page breaks before sections, numbered sections (skip level 1), TOC on own page
+  - **book**: full title page, two-sided margins for binding, chapters as "Chapter N" on odd pages, running headers, TOC on odd page
+
+- **Title block system** (`doc-make-title()`): Automatic title page/block generation from front matter metadata
+  - Supported fields: `title`, `subtitle`, `author`, `authors`, `date`, `version`, `publisher`
+  - Default function emitted by generator; class preambles can override with custom formatting
+  - All title variables guaranteed to exist (defaulting to `none`)
+
+- **Sample documents** in `samples/` with local config and Makefile
+  - `article.md`: academic paper with math, tables
+  - `report.md`: technical report with TOC, ASCII diagrams, budget tables
+  - `book.md`: multi-chapter book with consensus protocols, replication patterns
+
+### Fixed
+
+- **Auto-import scan** now traverses `List.items` (math inside list items was not triggering package imports)
 
 ## [0.3.2] - 2026-04-07
 

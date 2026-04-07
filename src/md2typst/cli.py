@@ -65,6 +65,12 @@ def main() -> None:
         multiple=True,
         help="Import Typst stylesheet module (can be repeated)",
     )
+    @click.option(
+        "--class",
+        "doc_class",
+        default=None,
+        help="Document class (article, report, book)",
+    )
     @click.option("--list-parsers", is_flag=True, help="List available parsers")
     @click.option("--show-config", is_flag=True, help="Show effective configuration")
     @click.option("--debug", is_flag=True, help="Show debug info (config, sources)")
@@ -76,6 +82,7 @@ def main() -> None:
         config_file: str | None,
         plugin: tuple[str, ...],
         stylesheet: tuple[str, ...],
+        doc_class: str | None = None,
         list_parsers: bool = False,
         show_config: bool = False,
         debug: bool = False,
@@ -104,6 +111,8 @@ def main() -> None:
             cli_overrides["plugins"] = list(plugin)
         if stylesheet:
             cli_overrides["stylesheets"] = list(stylesheet)
+        if doc_class:
+            cli_overrides["default_class"] = doc_class
 
         # Load configuration
         config = load_config(
@@ -184,6 +193,12 @@ def main_pdf() -> None:
         help="Import Typst stylesheet module (can be repeated)",
     )
     @click.option(
+        "--class",
+        "doc_class",
+        default=None,
+        help="Document class (article, report, book)",
+    )
+    @click.option(
         "--debug", is_flag=True, help="Show debug info (config, Typst source)"
     )
     @click.version_option(__version__)
@@ -194,6 +209,7 @@ def main_pdf() -> None:
         config_file: str | None,
         plugin: tuple[str, ...],
         stylesheet: tuple[str, ...],
+        doc_class: str | None = None,
         debug: bool = False,
     ) -> None:
         """Convert Markdown to PDF via Typst.
@@ -211,6 +227,8 @@ def main_pdf() -> None:
             cli_overrides["plugins"] = list(plugin)
         if stylesheet:
             cli_overrides["stylesheets"] = list(stylesheet)
+        if doc_class:
+            cli_overrides["default_class"] = doc_class
 
         # Load configuration
         config = load_config(

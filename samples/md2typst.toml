@@ -1,0 +1,215 @@
+# Local config for samples — self-contained, does not depend on user config
+default_class = "article"
+
+[style]
+font = ["IBM Plex Sans", "Noto Sans", "Arial"]
+font_size = "11pt"
+paper = "a4"
+
+# ─── article ─────────────────────────────────────
+[classes.article]
+preamble = """
+#set par(justify: true, leading: 0.7em, spacing: 1.3em)
+#show table.cell: set par(justify: false)
+#show heading: set par(justify: false, first-line-indent: 0pt)
+
+// Page numbers, centered in footer
+#set page(numbering: "1", number-align: center)
+
+// Section numbering: skip level 1 (title)
+#set heading(numbering: (..nums) => {
+  let n = nums.pos()
+  if n.len() <= 1 { return none }
+  numbering("1.1.1.", ..n.slice(1))
+})
+
+// Heading sizes
+#show heading.where(level: 1): set text(size: 1.6em, weight: 600)
+#show heading.where(level: 2): set text(size: 1.3em, weight: 600)
+#show heading.where(level: 3): set text(size: 1.15em, weight: 600)
+#show heading.where(level: 4): set text(size: 1.05em, weight: 600)
+
+// Heading spacing: generous above (separates from content),
+// small below (stays close to what follows — including sub-headings).
+// Consecutive headings: gap = max(small below, next above) ≈ next above.
+// So section→subsection = 1.4em instead of 2.0em.
+#show heading.where(level: 1): set block(above: 2.0em, below: 1.0em)
+#show heading.where(level: 2): set block(above: 2.0em, below: 1.0em)
+#show heading.where(level: 3): set block(above: 2.0em, below: 1.0em)
+#show heading.where(level: 4): set block(above: 2.0em, below: 1.0em)
+
+// Lists
+#set list(spacing: 0.8em, indent: 1.5em)
+#set enum(spacing: 0.8em, indent: 1.5em)
+
+// TOC
+#set outline(title: text(size: 0.72em, weight: 600, "Contents"))
+#show heading.where(level: 1): set heading(outlined: false)
+
+// Title block: inline on first page
+#let doc-make-title() = {
+  set align(center)
+  set par(justify: false)
+  block(spacing: 1.5em)[
+    #if doc-title != none [#text(size: 1.6em, weight: 600, str(doc-title)) #v(0.2em)]
+    #if doc-subtitle != none [#text(size: 1.2em, fill: luma(80), str(doc-subtitle)) #v(0.2em)]
+    #{
+      let parts = ()
+      if doc-author != none { parts.push(str(doc-author)) }
+      if doc-date != none { parts.push(str(doc-date)) }
+      if doc-version != none { parts.push("v" + str(doc-version)) }
+      if parts.len() > 0 { text(size: 1em, parts.join(" · ")) }
+    }
+  ]
+  v(1em)
+}
+"""
+
+# ─── report ──────────────────────────────────────
+[classes.report]
+preamble = """
+#set par(justify: true, leading: 0.7em, spacing: 1.3em)
+#show table.cell: set par(justify: false)
+#show heading: set par(justify: false, first-line-indent: 0pt)
+
+// Page numbers, centered in footer
+#set page(numbering: "1", number-align: center)
+
+// Number sections from level 2 (h1 = title)
+#set heading(numbering: (..nums) => {
+  let n = nums.pos()
+  if n.len() <= 1 { return none }
+  numbering("1.1.1.1.", ..n.slice(1))
+})
+
+// Heading sizes (semibold)
+#show heading.where(level: 1): set text(size: 1.8em, weight: 600)
+#show heading.where(level: 2): set text(size: 1.5em, weight: 600)
+#show heading.where(level: 3): set text(size: 1.3em, weight: 600)
+#show heading.where(level: 4): set text(size: 1.15em, weight: 600)
+#show heading.where(level: 5): set text(size: 1.05em, weight: 600)
+
+// Page break before each section (level 2)
+#show heading.where(level: 2): it => { pagebreak(weak: true); it }
+
+// Heading spacing
+#show heading.where(level: 1): set block(above: 2.0em, below: 1.0em)
+#show heading.where(level: 2): set block(above: 2.0em, below: 1.0em)
+#show heading.where(level: 3): set block(above: 2.0em, below: 1.0em)
+#show heading.where(level: 4): set block(above: 2.0em, below: 1.0em)
+
+// Lists
+#set list(spacing: 0.8em, indent: 2em)
+#set enum(spacing: 0.8em, indent: 2em)
+
+// TOC: own page, exclude level-1
+#show outline: it => { pagebreak(weak: true); it }
+#set outline(title: text(size: 0.72em, weight: 600, "Table of Contents"))
+#show heading.where(level: 1): set heading(outlined: false)
+
+// Title block: centered with rule
+#let doc-make-title() = {
+  set align(center)
+  set par(justify: false)
+  block(spacing: 2em)[
+    #if doc-title != none [#text(size: 2em, weight: 600, str(doc-title)) #v(0.3em)]
+    #if doc-subtitle != none [#text(size: 1.4em, fill: luma(80), str(doc-subtitle)) #v(0.3em)]
+    #if doc-author != none [#text(size: 1.1em, str(doc-author)) #v(0.2em)]
+    #{
+      let parts = ()
+      if doc-date != none { parts.push(str(doc-date)) }
+      if doc-version != none { parts.push("v" + str(doc-version)) }
+      if parts.len() > 0 { text(size: 1em, fill: luma(100), parts.join(" · ")) }
+    }
+    #if doc-publisher != none [#v(0.3em) #text(size: 1em, style: "italic", str(doc-publisher))]
+  ]
+  line(length: 60%, stroke: 0.5pt + luma(180))
+  v(1em)
+}
+"""
+
+# ─── book ────────────────────────────────────────
+[classes.book]
+preamble = """
+#set par(justify: true, leading: 0.7em, spacing: 1.3em)
+#show table.cell: set par(justify: false)
+#show heading: set par(justify: false, first-line-indent: 0pt)
+
+// Two-sided layout
+#set page(
+  margin: (inside: 3cm, outside: 2cm, top: 2.5cm, bottom: 2.5cm),
+  numbering: "1",
+  number-align: center,
+)
+
+// Numbering: all levels, including chapters
+#set heading(numbering: "1.1.1.1.")
+
+// Heading sizes
+#show heading.where(level: 2): set text(size: 1.5em, weight: 600)
+#show heading.where(level: 3): set text(size: 1.3em, weight: 600)
+#show heading.where(level: 4): set text(size: 1.15em, weight: 600)
+#show heading.where(level: 5): set text(size: 1.05em, weight: 600)
+
+// Chapters: start on odd page, display as "Chapter N"
+#show heading.where(level: 1): it => {
+  pagebreak(to: "odd", weak: true)
+  v(4em)
+  align(left)[
+    #text(size: 1.2em, fill: luma(100))[
+      Chapter #counter(heading).display("1")
+    ]
+    #v(0.5em)
+    #text(size: 2.2em, weight: 600, it.body)
+  ]
+  v(2em)
+}
+
+// Sections start on new page
+#show heading.where(level: 2): it => { pagebreak(weak: true); it }
+
+// Heading spacing
+#show heading.where(level: 2): set block(above: 2.0em, below: 1.0em)
+#show heading.where(level: 3): set block(above: 2.0em, below: 1.0em)
+#show heading.where(level: 4): set block(above: 2.0em, below: 1.0em)
+
+// Lists
+#set list(spacing: 0.8em, indent: 2em)
+#set enum(spacing: 0.8em, indent: 2em)
+
+// Headers: chapter title on even/odd pages
+#set page(header: context {
+  let chapters = query(heading.where(level: 1).before(here()))
+  if chapters.len() > 0 {
+    let title = chapters.last().body
+    if calc.odd(here().page()) {
+      align(right, emph(title))
+    } else {
+      align(left, emph(title))
+    }
+  }
+})
+
+// TOC: starts on odd page
+#show outline: it => { pagebreak(to: "odd", weak: true); it }
+#set outline(title: text(size: 0.72em, weight: 600, "Table of Contents"))
+
+// Title page: full separate page
+#let doc-make-title() = {
+  set page(numbering: none, header: none)
+  set align(center + horizon)
+  set par(justify: false)
+  block[
+    #if doc-title != none [#text(size: 2.4em, weight: 600, str(doc-title)) #v(0.5em)]
+    #if doc-subtitle != none [#text(size: 1.6em, weight: 400, fill: luma(80), str(doc-subtitle)) #v(0.5em)]
+    #line(length: 40%, stroke: 1pt + luma(150))
+    #v(1em)
+    #if doc-author != none [#text(size: 1.3em, str(doc-author)) #v(0.3em)]
+    #v(2em)
+    #if doc-date != none [#text(size: 1.1em, fill: luma(100), str(doc-date))]
+    #if doc-version != none [#h(1em) #text(size: 1.1em, fill: luma(100), "Version " + str(doc-version))]
+    #if doc-publisher != none [#v(1em) #text(size: 1.2em, style: "italic", str(doc-publisher))]
+  ]
+  pagebreak()
+}
+"""

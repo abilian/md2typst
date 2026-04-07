@@ -142,6 +142,20 @@ class TypstGenerator:
             if frontmatter:
                 prepended.append(frontmatter)
 
+        # Check if title metadata is present
+        has_title = doc.metadata and any(doc.metadata.get(k) for k in self.TITLE_KEYS)
+
+        # Ensure all title keys have #let bindings (default none)
+        if has_title:
+            defaults = []
+            for key in self.TITLE_KEYS:
+                var = f"doc-{key.replace('_', '-')}"
+                if key not in doc.metadata:
+                    defaults.append(f"#let {var} = none")
+            if defaults:
+                prepended.append("\n".join(defaults))
+            prepended.append(self._default_make_title())
+
         # Merge stylesheets from config and front matter
         all_stylesheets = self._stylesheets + extra_stylesheets
         if all_stylesheets:
@@ -166,6 +180,10 @@ class TypstGenerator:
             merged_preamble_parts.append(fm_preamble.strip())
         if merged_preamble_parts:
             prepended.append("\n".join(merged_preamble_parts))
+
+        # Call doc-make-title() after preamble (which may have overridden it)
+        if has_title:
+            prepended.append("#doc-make-title()")
 
         if prepended:
             result = "\n\n".join(prepended) + "\n\n" + result
@@ -228,6 +246,8 @@ class TypstGenerator:
                 needed.add(import_stmt)
             if hasattr(node, "children"):
                 self._scan_nodes(node.children, needed)
+            if hasattr(node, "items"):
+                self._scan_nodes(node.items, needed)
 
     def _effective_style(self, metadata: dict | None) -> Style:
         """Compute the effective Style by merging front matter over config.
@@ -278,14 +298,67 @@ class TypstGenerator:
 
         return "\n".join(lines)
 
+    @staticmethod
+    def _default_make_title() -> str:
+        """Emit a default doc-make-title() function.
+
+        This provides a simple centered title block. Class preambles
+        can redefine doc-make-title() to customize formatting.
+        All doc-* variables are guaranteed to exist (defaulting to none).
+        """
+        return """\
+#let doc-make-title() = {
+  set align(center)
+  set par(justify: false)
+  block(spacing: 2em)[
+    #if doc-title != none [
+      #text(size: 2em, weight: 600, str(doc-title))
+      #v(0.3em)
+    ]
+    #if doc-subtitle != none [
+      #text(size: 1.4em, weight: 400, fill: luma(80), str(doc-subtitle))
+      #v(0.3em)
+    ]
+    #if doc-author != none [
+      #text(size: 1.1em, str(doc-author))
+    ]
+    #if doc-authors != none [
+      #text(size: 1.1em, str(doc-authors))
+    ]
+    #v(0.3em)
+    #if doc-date != none [
+      #text(size: 1em, fill: luma(100), str(doc-date))
+    ]
+    #if doc-version != none [
+      #h(1em)
+      #text(size: 1em, fill: luma(100), "v" + str(doc-version))
+    ]
+    #if doc-publisher != none [
+      #v(0.3em)
+      #text(size: 1em, style: "italic", str(doc-publisher))
+    ]
+  ]
+}"""
+
     # Reserved front matter keys that have special handling
     # Front matter keys that override Style fields (not emitted as #let vars).
     STYLE_KEYS: ClassVar[frozenset[str]] = frozenset(
         {"font", "font_size", "language", "paper", "margin"}
     )
 
+    # Title metadata keys — emitted as #let variables AND used by doc-make-title()
+    TITLE_KEYS: ClassVar[tuple[str, ...]] = (
+        "title",
+        "subtitle",
+        "author",
+        "authors",
+        "date",
+        "version",
+        "publisher",
+    )
+
     RESERVED_FRONTMATTER_KEYS: ClassVar[frozenset[str]] = frozenset(
-        {"preamble", "stylesheet", "stylesheets"}
+        {"preamble", "stylesheet", "stylesheets", "class"}
     ) | frozenset({"font", "font_size", "language", "paper", "margin"})
 
     def _generate_frontmatter_variables(self, metadata: dict) -> str:

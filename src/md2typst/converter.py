@@ -72,11 +72,15 @@ def convert_with_config(markdown: str, config: Config) -> str:
 
     doc = p.parse(markdown)
 
+    # Resolve document class: front matter `class` overrides config default
+    class_name = (doc.metadata or {}).get("class")
+    resolved = config.resolve_class(class_name)
+
     # Extract generator options
-    note_style = config.output_options.get("note_style", "footnote")
+    note_style = resolved.output_options.get("note_style", "footnote")
     return generate_typst(
         doc,
         note_style=note_style,
-        stylesheets=config.stylesheets,
-        style=config.style,
+        stylesheets=resolved.stylesheets,
+        style=resolved.style,
     )

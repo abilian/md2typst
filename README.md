@@ -10,6 +10,9 @@ A robust Markdown to [Typst](https://typst.app/) converter in Python with suppor
 - **Mermaid diagrams**: ` ```mermaid ` code blocks rendered via [mmdr](https://typst.app/universe/package/mmdr/)
 - **Auto-imports**: Required Typst packages are automatically imported based on content
 - **Direct PDF output**: `md2pdf` command converts Markdown to PDF in one step (requires `typst` CLI)
+- **Document classes**: `article`, `report`, and `book` presets (like LaTeX), selectable via front matter, CLI, or config
+- **Title blocks**: Automatic title page/block from front matter (title, author, date, version, publisher)
+- **`[TOC]` support**: Table of contents via `[TOC]` marker
 - **Diagram blocks**: ` ```diagram ` keeps ASCII-art diagrams from breaking across pages
 - **Configurable**: User config, project config, YAML front matter, and CLI options with clear cascade
 - **Extensible**: Plugin support for parser-specific extensions
@@ -48,6 +51,9 @@ md2typst --parser mistune input.md
 # Convert directly to PDF (requires typst CLI)
 md2pdf input.md
 md2pdf input.md -o custom-output.pdf
+
+# Use a document class
+md2pdf --class report input.md
 
 # List available parsers
 md2typst --list-parsers
@@ -105,6 +111,7 @@ All parsers have GFM extensions (tables, strikethrough) enabled by default.
 | GFM tables | `#table(...)` |
 | ` ```mermaid ` | `#mermaid("...")` |
 | ` ```diagram ` | `#block(breakable: false)[...]` |
+| `[TOC]` | `#outline(indent: auto, depth: 4)` |
 
 ## Configuration
 
@@ -250,6 +257,64 @@ Use ` ```diagram ` for ASCII-art or box-drawing diagrams that must not break acr
 
 The content is wrapped in `#block(breakable: false)` in the Typst output.
 
+### Document Classes
+
+md2typst supports named document classes inspired by LaTeX (`article`, `report`, `book`). Each class provides a complete set of Typst styling rules.
+
+Select a class via front matter, CLI, or config:
+
+```yaml
+---
+class: report
+title: My Report
+---
+```
+
+```bash
+md2pdf --class book input.md
+```
+
+```toml
+# In md2typst.toml or ~/.config/md2typst/config.toml
+default_class = "article"
+```
+
+| Class | Title | Sections | Page breaks | TOC |
+|-------|-------|----------|-------------|-----|
+| **article** | Inline on first page | Numbered, no breaks | None | Inline |
+| **report** | Centered with rule | Numbered (skip h1), breaks before `##` | Before sections | Own page |
+| **book** | Full title page | "Chapter N" for h1, numbered | Chapters on odd pages | Odd page |
+
+Classes are defined in `[classes.<name>]` config sections. The class preamble replaces the base `[style]` preamble; scalar fields (font, paper, etc.) are inherited unless overridden.
+
+### Title Block
+
+When title metadata is present in front matter, a title block is automatically generated. Each document class formats it differently.
+
+```yaml
+---
+title: My Document
+subtitle: A Technical Overview
+author: Jane Doe
+date: April 2026
+version: "1.0"
+publisher: Acme Corp
+---
+```
+
+Supported fields: `title`, `subtitle`, `author`, `authors`, `date`, `version`, `publisher`. Classes define a `doc-make-title()` function in their preamble to customize the title formatting.
+
+### Table of Contents
+
+Place `[TOC]` on its own line to generate a table of contents:
+
+```markdown
+[TOC]
+
+## Introduction
+...
+```
+
 ### CLI Options
 
 ```bash
@@ -258,6 +323,7 @@ md2typst --help
 Options:
   -o, --output FILE      Output file (default: <input>.typ, or stdout for stdin)
   -p, --parser NAME      Parser to use (markdown-it, mistune, marko)
+  --class NAME           Document class (article, report, book)
   --plugin NAME          Load parser plugin (can be repeated)
   --stylesheet NAME      Import Typst stylesheet (can be repeated)
   --config FILE          Path to configuration file
@@ -298,6 +364,16 @@ tests/
 ├── c_e2e/           # End-to-end tests
 ├── d_benchmark/     # Performance benchmarks
 └── fixtures/        # Test fixtures (CommonMark, GFM)
+```
+
+### Sample Documents
+
+The `samples/` directory contains example documents for each class with a local config and Makefile:
+
+```bash
+cd samples
+make all    # Build article.pdf, report.pdf, book.pdf
+make clean  # Remove generated files
 ```
 
 ### Code Quality

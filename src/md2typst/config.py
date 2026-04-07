@@ -79,6 +79,8 @@ class Config:
         stylesheets: List of Typst stylesheet modules to import.
         output_options: Options for Typst output generation.
         style: Typst styling options (font, language, page setup, preamble).
+        default_class: Name of the document class to use if not overridden.
+        classes: Named document classes mapping name → Style-like dict.
     """
 
     parser: str = "markdown-it"
@@ -87,12 +89,16 @@ class Config:
     stylesheets: list[str] = field(default_factory=list)
     output_options: dict[str, Any] = field(default_factory=dict)
     style: Style = field(default_factory=Style)
+    default_class: str | None = None
+    classes: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def merge(self, other: dict[str, Any]) -> Config:
         """Merge another config dict into this one, returning a new Config.
 
         Values from `other` override values in self.
         """
+        # Merge classes dicts (other's classes override self's per key)
+        merged_classes = {**self.classes, **other.get("classes", {})}
         return Config(
             parser=other.get("parser", self.parser),
             parser_options={**self.parser_options, **other.get("parser_options", {})},
@@ -100,6 +106,46 @@ class Config:
             stylesheets=other.get("stylesheets", self.stylesheets) or self.stylesheets,
             output_options={**self.output_options, **other.get("output_options", {})},
             style=self.style.merge(other.get("style", {})),
+            default_class=other.get("default_class", self.default_class),
+            classes=merged_classes,
+        )
+
+    def resolve_class(self, class_name: str | None = None) -> Config:
+        """Resolve a document class, returning a new Config with the class applied.
+
+        The class preamble REPLACES the base style preamble (does not
+        concatenate). Scalar style fields from the class override the base.
+
+        Args:
+            class_name: Class name to resolve. Falls back to default_class.
+                        If None and no default_class, returns self unchanged.
+
+        Returns:
+            New Config with the class style applied.
+        """
+        name = class_name or self.default_class
+        if not name or name not in self.classes:
+            return self
+        class_style = dict(self.classes[name])
+        # Class preamble replaces base preamble (not concatenate)
+        base_style = Style(
+            font=self.style.font,
+            font_size=self.style.font_size,
+            language=self.style.language,
+            paper=self.style.paper,
+            margin=self.style.margin,
+            preamble="",  # clear base preamble before merge
+        )
+        resolved = base_style.merge(class_style)
+        return Config(
+            parser=self.parser,
+            parser_options=self.parser_options,
+            plugins=self.plugins,
+            stylesheets=self.stylesheets,
+            output_options=self.output_options,
+            style=resolved,
+            default_class=self.default_class,
+            classes=self.classes,
         )
 
     @classmethod
