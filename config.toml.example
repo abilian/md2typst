@@ -4,16 +4,51 @@
 # front matter in the document, or by CLI flags.
 
 [style]
-# Paragraphs: justified, with a modest first-line indent and tighter leading.
-# Heading sizes scaled up in em units so they track the body font size.
+# IBM Plex Sans — professional, humanist, great for technical reports
+font = ["IBM Plex Sans", "Noto Sans", "Arial"]
+# Inter — modern, crisp, optimized for readability
+# font = ["Inter", "Noto Sans", "Arial"]
+# Avenir — geometric, elegant (macOS built-in)
+# font = ["Avenir", "Helvetica Neue", "Arial"]
+# Serif alternative
+# font = ["Source Serif 4", "Noto Serif", "Georgia", "Times New Roman"]
+font_size = "11pt"
+paper = "a4"
+
 preamble = """
-#set par(justify: true, leading: 0.65em)
+#set par(justify: true, leading: 0.85em, spacing: 1.2em)
+#show table.cell: set par(justify: false)
+#show heading: set par(justify: false, first-line-indent: 0pt)
 
-#show heading.where(level: 1): set text(size: 2.0em)
-#show heading.where(level: 2): set text(size: 1.6em)
-#show heading.where(level: 3): set text(size: 1.3em)
-#show heading.where(level: 4): set text(size: 1.15em)
-#show heading.where(level: 5): set text(size: 1.05em)
+// Number sections from level 2 (h1 = title, h2 = "1.", h3 = "1.1.", etc.)
+#set heading(numbering: (..nums) => {
+  let n = nums.pos()
+  if n.len() <= 1 { return none }
+  numbering("1.1.1.1.", ..n.slice(1))
+})
 
-#show heading: it => { it; v(0.4em) }
+// Heading sizes (semibold, not full bold — lighter with sans-serif)
+#show heading.where(level: 1): set text(size: 1.8em, weight: 600)
+#show heading.where(level: 2): set text(size: 1.5em, weight: 600)
+#show heading.where(level: 3): set text(size: 1.3em, weight: 600)
+#show heading.where(level: 4): set text(size: 1.15em, weight: 600)
+#show heading.where(level: 5): set text(size: 1.05em, weight: 600)
+
+// Page break before each section (level 2)
+#show heading.where(level: 2): it => { pagebreak(weak: true); it }
+
+// Heading spacing — generous above, clear below
+#show heading.where(level: 1): set block(above: 3.0em, below: 1.5em)
+#show heading.where(level: 2): set block(above: 2.4em, below: 1.2em)
+#show heading.where(level: 3): set block(above: 2.0em, below: 1.0em)
+#show heading.where(level: 4): set block(above: 1.6em, below: 0.8em)
+
+// Lists: tighter spacing, indented
+#set list(spacing: 0.8em, indent: 2em)
+#set enum(spacing: 0.8em, indent: 2em)
+
+// TOC: page break before, style title, exclude level-1 headings
+#show outline: it => { pagebreak(weak: true); it }
+#set outline(title: text(size: 0.72em, weight: 600, "Table of Contents"))
+#show heading.where(level: 1): set heading(outlined: false)
 """
