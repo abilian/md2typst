@@ -10,7 +10,8 @@ A robust Markdown to [Typst](https://typst.app/) converter in Python with suppor
 - **Mermaid diagrams**: ` ```mermaid ` code blocks rendered via [mmdr](https://typst.app/universe/package/mmdr/)
 - **Auto-imports**: Required Typst packages are automatically imported based on content
 - **Direct PDF output**: `md2pdf` command converts Markdown to PDF in one step (requires `typst` CLI)
-- **Configurable**: TOML configuration files, CLI options, and YAML front matter
+- **Diagram blocks**: ` ```diagram ` keeps ASCII-art diagrams from breaking across pages
+- **Configurable**: User config, project config, YAML front matter, and CLI options with clear cascade
 - **Extensible**: Plugin support for parser-specific extensions
 - **Well-tested**: Comprehensive test suite with TCK validation against CommonMark
 
@@ -103,6 +104,7 @@ All parsers have GFM extensions (tables, strikethrough) enabled by default.
 | `---` | `#line(length: 100%)` |
 | GFM tables | `#table(...)` |
 | ` ```mermaid ` | `#mermaid("...")` |
+| ` ```diagram ` | `#block(breakable: false)[...]` |
 
 ## Configuration
 
@@ -234,6 +236,20 @@ graph LR
 ```
 ````
 
+### Diagram Blocks
+
+Use ` ```diagram ` for ASCII-art or box-drawing diagrams that must not break across pages:
+
+````markdown
+```diagram
+┌──────────┐       ┌──────────┐
+│  Client  │──────▶│  Server  │
+└──────────┘       └──────────┘
+```
+````
+
+The content is wrapped in `#block(breakable: false)` in the Typst output.
+
 ### CLI Options
 
 ```bash
@@ -247,6 +263,7 @@ Options:
   --config FILE          Path to configuration file
   --list-parsers         List available parsers
   --show-config          Show effective configuration
+  --debug                Show debug info (config sources, generated Typst)
 ```
 
 ## Development
