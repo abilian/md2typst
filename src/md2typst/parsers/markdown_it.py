@@ -15,6 +15,7 @@ from md2typst.ast import (
     BlockQuote,
     Code,
     CodeBlock,
+    DiagramBlock,
     Document,
     Emphasis,
     FootnoteDef,
@@ -180,6 +181,8 @@ class MarkdownItParser(MarkdownParser):
                 lang = token.info.strip() if token.info else None
                 if lang == "mermaid":
                     nodes.append(MermaidBlock(code=token.content))
+                elif lang == "diagram":
+                    nodes.append(DiagramBlock(code=token.content))
                 else:
                     nodes.append(CodeBlock(code=token.content, language=lang))
                 i += 1

@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   6. Front matter in the document
   7. CLI flags
 
+- **Diagram blocks**: ` ```diagram ` code blocks are wrapped in `#block(breakable: false)` to prevent page breaks inside ASCII-art diagrams
+
+- **`--debug` flag**: Added to both `md2typst` and `md2pdf` commands; shows effective config, user config path, and generated Typst source
+
 - **Front matter style overrides**: Style fields can be set directly in YAML front matter
   - Keys: `font`, `font_size`, `language`, `paper`, `margin`
   - These override the config `[style]` section at the document level

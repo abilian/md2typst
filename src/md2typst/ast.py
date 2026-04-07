@@ -355,6 +355,34 @@ class MermaidBlock(Node):
 
 
 @dataclass(frozen=True)
+class DiagramBlock(Node):
+    """An ASCII-art diagram block that must not break across pages.
+
+    Example Markdown:
+        ```diagram
+        ┌──────────┐
+        │  Server  │
+        └──────────┘
+        ```
+
+    Example Typst output:
+        #block(breakable: false)[
+        ```
+        ┌──────────┐
+        │  Server  │
+        └──────────┘
+        ```
+        ]
+    """
+
+    code: str  # Diagram source (ASCII art)
+
+    def __str__(self) -> str:
+        lines = self.code.count("\n") + 1
+        return f"DiagramBlock({lines} lines)"
+
+
+@dataclass(frozen=True)
 class IndexEntry(Node):
     """An index entry marker for document indexing.
 

@@ -18,6 +18,7 @@ from md2typst.ast import (
     BlockQuote,
     Code,
     CodeBlock,
+    DiagramBlock,
     Document,
     Emphasis,
     FootnoteDef,
@@ -122,6 +123,8 @@ class MarkoParser(MarkdownParser):
             code = self._get_raw_text(element.children)
             if lang == "mermaid":
                 return MermaidBlock(code=code)
+            if lang == "diagram":
+                return DiagramBlock(code=code)
             return CodeBlock(code=code, language=lang)
 
         if isinstance(element, marko_block.CodeBlock):

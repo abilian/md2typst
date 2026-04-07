@@ -11,11 +11,34 @@ from typing import Any
 
 import click
 
-from md2typst.config import load_config
+from md2typst.config import Config, find_user_config, load_config
 from md2typst.converter import convert_with_config
 from md2typst.parsers import list_parsers as get_available_parsers
 
 __version__ = version("md2typst")
+
+
+def _print_debug_config(config: Config, input_path: Path) -> None:
+    """Print debug info about effective configuration to stderr."""
+    click.echo("--- Debug: effective configuration ---", err=True)
+    click.echo(f"  input: {input_path}", err=True)
+    user_cfg = find_user_config()
+    click.echo(f"  user config: {user_cfg or '(not found)'}", err=True)
+    click.echo(f"  parser: {config.parser}", err=True)
+    click.echo(f"  plugins: {config.plugins}", err=True)
+    click.echo(f"  stylesheets: {config.stylesheets}", err=True)
+    s = config.style
+    click.echo(f"  style.font: {s.font or '(default)'}", err=True)
+    click.echo(f"  style.font_size: {s.font_size or '(default)'}", err=True)
+    click.echo(f"  style.language: {s.language or '(default)'}", err=True)
+    click.echo(f"  style.paper: {s.paper or '(default)'}", err=True)
+    click.echo(f"  style.margin: {s.margin or '(default)'}", err=True)
+    if s.preamble:
+        lines = s.preamble.strip().splitlines()
+        click.echo(f"  style.preamble: ({len(lines)} lines)", err=True)
+    else:
+        click.echo("  style.preamble: (empty)", err=True)
+    click.echo("---", err=True)
 
 
 def main() -> None:
@@ -44,6 +67,7 @@ def main() -> None:
     )
     @click.option("--list-parsers", is_flag=True, help="List available parsers")
     @click.option("--show-config", is_flag=True, help="Show effective configuration")
+    @click.option("--debug", is_flag=True, help="Show debug info (config, sources)")
     @click.version_option(__version__)
     def cli(
         input: str | None,
@@ -54,6 +78,7 @@ def main() -> None:
         stylesheet: tuple[str, ...],
         list_parsers: bool = False,
         show_config: bool = False,
+        debug: bool = False,
     ) -> None:
         """Convert Markdown to Typst.
 
@@ -87,6 +112,10 @@ def main() -> None:
             cli_overrides=cli_overrides,
         )
 
+        if debug:
+            input_path = Path(input) if input and input != "-" else Path.cwd()
+            _print_debug_config(config, input_path)
+
         if show_config:
             click.echo("Effective configuration:")
             click.echo(f"  parser: {config.parser}")
@@ -94,6 +123,12 @@ def main() -> None:
             click.echo(f"  stylesheets: {config.stylesheets}")
             click.echo(f"  parser_options: {config.parser_options}")
             click.echo(f"  output_options: {config.output_options}")
+            click.echo(f"  style.font: {config.style.font or '(default)'}")
+            click.echo(f"  style.language: {config.style.language or '(default)'}")
+            click.echo(f"  style.paper: {config.style.paper or '(default)'}")
+            click.echo(
+                f"  style.preamble: {'yes' if config.style.preamble else '(empty)'}"
+            )
             return
 
         if input is None or input == "-":
@@ -148,6 +183,9 @@ def main_pdf() -> None:
         multiple=True,
         help="Import Typst stylesheet module (can be repeated)",
     )
+    @click.option(
+        "--debug", is_flag=True, help="Show debug info (config, Typst source)"
+    )
     @click.version_option(__version__)
     def cli(
         input: str,
@@ -156,6 +194,7 @@ def main_pdf() -> None:
         config_file: str | None,
         plugin: tuple[str, ...],
         stylesheet: tuple[str, ...],
+        debug: bool = False,
     ) -> None:
         """Convert Markdown to PDF via Typst.
 
@@ -180,9 +219,17 @@ def main_pdf() -> None:
             cli_overrides=cli_overrides,
         )
 
+        if debug:
+            _print_debug_config(config, input_path)
+
         # Convert Markdown to Typst
         text = input_path.read_text()
         typst_source = convert_with_config(text, config)
+
+        if debug:
+            click.echo("--- Generated Typst source ---", err=True)
+            click.echo(typst_source, err=True)
+            click.echo("--- End Typst source ---", err=True)
 
         # Write to a temporary .typ file and compile to PDF
         with tempfile.NamedTemporaryFile(
@@ -190,6 +237,9 @@ def main_pdf() -> None:
         ) as tmp:
             tmp.write(typst_source)
             tmp.flush()
+
+            if debug:
+                click.echo(f"Temp file: {tmp.name}", err=True)
 
             result = subprocess.run(  # noqa: S603
                 ["typst", "compile", tmp.name, str(output_path)],  # noqa: S607
@@ -201,5 +251,8 @@ def main_pdf() -> None:
         if result.returncode != 0:
             click.echo(f"typst compile failed:\n{result.stderr}", err=True)
             sys.exit(result.returncode)
+
+        if debug:
+            click.echo(f"Wrote {output_path}", err=True)
 
     cli()

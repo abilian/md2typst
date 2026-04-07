@@ -19,6 +19,7 @@ from .ast import (
     BlockQuote,
     Code,
     CodeBlock,
+    DiagramBlock,
     Document,
     Emphasis,
     FootnoteDef,
@@ -743,6 +744,15 @@ class TypstGenerator:
         """
         content = escape_typst_string(node.code.strip())
         return f'#mermaid("{content}")'
+
+    def visit_DiagramBlock(self, node: DiagramBlock) -> str:
+        """Convert diagram block to an unbreakable Typst raw block.
+
+        Markdown: ```diagram ... ```
+        Typst: #block(breakable: false)[ ``` ... ``` ]
+        """
+        code = node.code.rstrip("\n")
+        return f"#block(breakable: false)[\n```\n{code}\n```\n]"
 
 
 def generate_typst(

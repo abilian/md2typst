@@ -14,6 +14,7 @@ from md2typst.ast import (
     BlockQuote,
     Code,
     CodeBlock,
+    DiagramBlock,
     Document,
     Emphasis,
     FootnoteDef,
@@ -153,6 +154,8 @@ class MistuneParser(MarkdownParser):
             raw = token.get("raw", "")
             if info == "mermaid":
                 return MermaidBlock(code=raw)
+            if info == "diagram":
+                return DiagramBlock(code=raw)
             return CodeBlock(code=raw, language=info or None)
 
         if token_type == "block_quote":
