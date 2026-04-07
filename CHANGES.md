@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - Unreleased
+
+- **`[TOC]` support**: A standalone `[TOC]` paragraph is converted to `#outline(indent: auto, depth: 4)` for table of contents generation
+
 ## [0.3.2] - 2026-04-07
 
 ### Added
@@ -35,8 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Diagram blocks**: ` ```diagram ` code blocks are wrapped in `#block(breakable: false)` to prevent page breaks inside ASCII-art diagrams
 
 - **`--debug` flag**: Added to both `md2typst` and `md2pdf` commands; shows effective config, user config path, and generated Typst source
-
-- **`[TOC]` support**: A standalone `[TOC]` paragraph is converted to `#outline(indent: auto, depth: 4)` for table of contents generation
 
 
 ### Changed
