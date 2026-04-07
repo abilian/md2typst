@@ -370,7 +370,15 @@ class TypstGenerator:
     # =========================================================================
 
     def visit_Paragraph(self, node: Paragraph) -> str:
-        """Convert paragraph to Typst."""
+        """Convert paragraph to Typst.
+
+        Special case: a paragraph containing only [TOC] is converted
+        to a Typst #outline() (table of contents).
+        """
+        if all(isinstance(c, Text) for c in node.children):
+            raw = "".join(c.content for c in node.children).strip()
+            if raw == "[TOC]":
+                return "#outline(indent: auto, depth: 4)"
         return self._visit_children_inline(node.children)
 
     def visit_Heading(self, node: Heading) -> str:

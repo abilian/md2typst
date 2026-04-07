@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`--debug` flag**: Added to both `md2typst` and `md2pdf` commands; shows effective config, user config path, and generated Typst source
 
+- **`[TOC]` support**: A standalone `[TOC]` paragraph is converted to `#outline(indent: auto, depth: 4)` for table of contents generation
+
 
 ### Changed
 
