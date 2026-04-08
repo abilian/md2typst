@@ -48,6 +48,10 @@ echo "# Hello **World**" | md2typst
 # Use a specific parser
 md2typst --parser mistune input.md
 
+# Convert multiple files at once
+md2typst *.md
+md2pdf *.md
+
 # Convert directly to PDF (requires typst CLI)
 md2pdf input.md
 md2pdf input.md -o custom-output.pdf

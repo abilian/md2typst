@@ -8,7 +8,7 @@ This module converts the parser-agnostic AST to Typst source code.
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from .config import Style
 
@@ -449,7 +449,8 @@ class TypstGenerator:
         to a Typst #outline() (table of contents).
         """
         if all(isinstance(c, Text) for c in node.children):
-            raw = "".join(c.content for c in node.children).strip()
+            texts = cast("tuple[Text, ...]", node.children)
+            raw = "".join(c.content for c in texts).strip()
             if raw == "[TOC]":
                 return "#outline(indent: auto, depth: 4)"
         return self._visit_children_inline(node.children)

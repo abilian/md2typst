@@ -8,7 +8,7 @@ PYTHONS = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
 
 @nox.session(python=PYTHONS)
-def tests(session: nox.Session):
+def tests(session: nox.Session) -> None:
     """Run the test suite."""
     uv_sync(session)
     session.run("pytest")
@@ -17,7 +17,7 @@ def tests(session: nox.Session):
 
 
 @nox.session
-def check(session: nox.Session):
+def check(session: nox.Session) -> None:
     """Run all checks (lint, typecheck, tests)."""
     uv_sync(session)
     session.run("ruff", "check", "src")
@@ -33,6 +33,6 @@ def check(session: nox.Session):
 #
 # Utils
 #
-def uv_sync(session: nox.Session):
+def uv_sync(session: nox.Session) -> None:
     session.run("uv", "sync", "-q", "--active", external=True)
     # session.run("uv", "sync", "-q", "--all-groups", "--all-extras", "--active", external=True)

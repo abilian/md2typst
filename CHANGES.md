@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Multiple input files**: `md2typst *.md` and `md2pdf *.md` now accept multiple arguments, converting each file in turn
+
 - **`[TOC]` support**: A standalone `[TOC]` paragraph is converted to `#outline(indent: auto, depth: 4)` for table of contents generation
 
 - **Document classes** (`article`, `report`, `book`): Named style presets defined in `[classes.<name>]` config sections, inspired by LaTeX document classes

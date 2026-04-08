@@ -41,11 +41,36 @@ def _print_debug_config(config: Config, input_path: Path) -> None:
     click.echo("---", err=True)
 
 
+def _convert_one(
+    input_path: Path,
+    output: str | None,
+    config: Config,
+    debug: bool,
+) -> None:
+    """Convert a single Markdown file to Typst."""
+    if debug:
+        _print_debug_config(config, input_path)
+
+    text = input_path.read_text()
+    result = convert_with_config(text, config)
+
+    if output == "-":
+        click.echo(result)
+    elif output:
+        with Path(output).open("w") as f:
+            f.write(result)
+    else:
+        out_path = input_path.with_suffix(".typ")
+        with out_path.open("w") as f:
+            f.write(result)
+        click.echo(f"Wrote {out_path}", err=True)
+
+
 def main() -> None:
     """CLI entry point for md2typst."""
 
     @click.command()
-    @click.argument("input", type=click.Path(exists=True), required=False)
+    @click.argument("inputs", nargs=-1, type=click.Path(exists=True))
     @click.option(
         "-o", "--output", type=click.Path(), help="Output file (default: <input>.typ)"
     )
@@ -76,7 +101,7 @@ def main() -> None:
     @click.option("--debug", is_flag=True, help="Show debug info (config, sources)")
     @click.version_option(__version__)
     def cli(
-        input: str | None,
+        inputs: tuple[str, ...],
         output: str | None,
         parser: str | None,
         config_file: str | None,
@@ -89,7 +114,7 @@ def main() -> None:
     ) -> None:
         """Convert Markdown to Typst.
 
-        INPUT is the Markdown file to convert. Use - for stdin.
+        INPUTS are Markdown files to convert. Reads from stdin if none given.
         """
         if list_parsers:
             click.echo("Available parsers:")
@@ -97,9 +122,16 @@ def main() -> None:
                 click.echo(f"  - {name}")
             return
 
+        if len(inputs) > 1 and output and output != "-":
+            click.echo(
+                "Error: -o/--output cannot be used with multiple input files.",
+                err=True,
+            )
+            sys.exit(1)
+
         # Determine start directory for config search
-        if input and input != "-":
-            start_dir = Path(input).parent
+        if inputs:
+            start_dir = Path(inputs[0]).parent
         else:
             start_dir = Path.cwd()
 
@@ -121,10 +153,6 @@ def main() -> None:
             cli_overrides=cli_overrides,
         )
 
-        if debug:
-            input_path = Path(input) if input and input != "-" else Path.cwd()
-            _print_debug_config(config, input_path)
-
         if show_config:
             click.echo("Effective configuration:")
             click.echo(f"  parser: {config.parser}")
@@ -140,36 +168,73 @@ def main() -> None:
             )
             return
 
-        if input is None or input == "-":
+        if not inputs:
+            # stdin mode
             text = sys.stdin.read()
-        else:
-            with Path(input).open() as f:
-                text = f.read()
+            result = convert_with_config(text, config)
+            if output and output != "-":
+                with Path(output).open("w") as f:
+                    f.write(result)
+            else:
+                click.echo(result)
+            return
 
-        result = convert_with_config(text, config)
-
-        # Default output: <input>.typ for file input, stdout for stdin
-        if output == "-":
-            click.echo(result)
-        elif output:
-            with Path(output).open("w") as f:
-                f.write(result)
-        elif input and input != "-":
-            out_path = Path(input).with_suffix(".typ")
-            with out_path.open("w") as f:
-                f.write(result)
-            click.echo(f"Wrote {out_path}", err=True)
-        else:
-            click.echo(result)
+        for inp in inputs:
+            _convert_one(Path(inp), output, config, debug)
 
     cli()
+
+
+def _compile_one_pdf(
+    input_path: Path,
+    output: str | None,
+    config: Config,
+    debug: bool,
+) -> bool:
+    """Convert a single Markdown file to PDF. Returns True on success."""
+    output_path = Path(output) if output else input_path.with_suffix(".pdf")
+
+    if debug:
+        _print_debug_config(config, input_path)
+
+    text = input_path.read_text()
+    typst_source = convert_with_config(text, config)
+
+    if debug:
+        click.echo("--- Generated Typst source ---", err=True)
+        click.echo(typst_source, err=True)
+        click.echo("--- End Typst source ---", err=True)
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".typ", dir=input_path.parent, delete=True
+    ) as tmp:
+        tmp.write(typst_source)
+        tmp.flush()
+
+        if debug:
+            click.echo(f"Temp file: {tmp.name}", err=True)
+
+        result = subprocess.run(  # noqa: S603
+            ["typst", "compile", tmp.name, str(output_path)],  # noqa: S607
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    if result.returncode != 0:
+        click.echo(f"typst compile failed for {input_path}:\n{result.stderr}", err=True)
+        return False
+
+    if debug:
+        click.echo(f"Wrote {output_path}", err=True)
+    return True
 
 
 def main_pdf() -> None:
     """CLI entry point for md2pdf: convert Markdown to PDF via Typst."""
 
     @click.command()
-    @click.argument("input", type=click.Path(exists=True))
+    @click.argument("inputs", nargs=-1, type=click.Path(exists=True), required=True)
     @click.option(
         "-o",
         "--output",
@@ -203,7 +268,7 @@ def main_pdf() -> None:
     )
     @click.version_option(__version__)
     def cli(
-        input: str,
+        inputs: tuple[str, ...],
         output: str | None,
         parser: str | None,
         config_file: str | None,
@@ -214,10 +279,14 @@ def main_pdf() -> None:
     ) -> None:
         """Convert Markdown to PDF via Typst.
 
-        INPUT is the Markdown file to convert.
+        INPUTS are Markdown files to convert.
         """
-        input_path = Path(input)
-        output_path = Path(output) if output else input_path.with_suffix(".pdf")
+        if len(inputs) > 1 and output:
+            click.echo(
+                "Error: -o/--output cannot be used with multiple input files.",
+                err=True,
+            )
+            sys.exit(1)
 
         # Build CLI overrides
         cli_overrides: dict[str, Any] = {}
@@ -230,47 +299,19 @@ def main_pdf() -> None:
         if doc_class:
             cli_overrides["default_class"] = doc_class
 
-        # Load configuration
+        # Load configuration (use first input's directory for config search)
         config = load_config(
             config_file=Path(config_file) if config_file else None,
-            start_dir=input_path.parent,
+            start_dir=Path(inputs[0]).parent,
             cli_overrides=cli_overrides,
         )
 
-        if debug:
-            _print_debug_config(config, input_path)
+        failed = False
+        for inp in inputs:
+            if not _compile_one_pdf(Path(inp), output, config, debug):
+                failed = True
 
-        # Convert Markdown to Typst
-        text = input_path.read_text()
-        typst_source = convert_with_config(text, config)
-
-        if debug:
-            click.echo("--- Generated Typst source ---", err=True)
-            click.echo(typst_source, err=True)
-            click.echo("--- End Typst source ---", err=True)
-
-        # Write to a temporary .typ file and compile to PDF
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".typ", dir=input_path.parent, delete=True
-        ) as tmp:
-            tmp.write(typst_source)
-            tmp.flush()
-
-            if debug:
-                click.echo(f"Temp file: {tmp.name}", err=True)
-
-            result = subprocess.run(  # noqa: S603
-                ["typst", "compile", tmp.name, str(output_path)],  # noqa: S607
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-
-        if result.returncode != 0:
-            click.echo(f"typst compile failed:\n{result.stderr}", err=True)
-            sys.exit(result.returncode)
-
-        if debug:
-            click.echo(f"Wrote {output_path}", err=True)
+        if failed:
+            sys.exit(1)
 
     cli()
