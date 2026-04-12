@@ -45,7 +45,7 @@ from md2typst.frontmatter import extract_frontmatter
 from .base import MarkdownParser
 
 # Default GFM plugins to enable
-GFM_PLUGINS = ["strikethrough", "table"]
+GFM_PLUGINS = ["strikethrough", "table", "footnotes"]
 
 
 class MistuneParser(MarkdownParser):

@@ -5,7 +5,7 @@ A robust Markdown to [Typst](https://typst.app/) converter in Python with suppor
 ## Features
 
 - **Multiple parser backends**: Choose from markdown-it-py, mistune, or marko at runtime
-- **GFM support**: Tables, strikethrough, and other GitHub Flavored Markdown extensions
+- **GFM support**: Tables, strikethrough, footnotes, and other GitHub Flavored Markdown extensions
 - **Math support**: `$...$` and `$$...$$` rendered via [mitex](https://typst.app/universe/package/mitex/), enabled by default
 - **Mermaid diagrams**: ` ```mermaid ` code blocks rendered via [mmdr](https://typst.app/universe/package/mmdr/)
 - **Auto-imports**: Required Typst packages are automatically imported based on content
@@ -94,7 +94,7 @@ typst = convert_with_config("| A | B |\n|---|---|\n| 1 | 2 |", config)
 | [mistune](https://github.com/lepture/mistune) | `mistune` | Fast, pure Python |
 | [marko](https://github.com/frostming/marko) | `marko` | CommonMark compliant, extensible |
 
-All parsers have GFM extensions (tables, strikethrough) enabled by default.
+All parsers have GFM extensions (tables, strikethrough, footnotes) enabled by default.
 
 ## Markdown to Typst Mapping
 
@@ -113,6 +113,7 @@ All parsers have GFM extensions (tables, strikethrough) enabled by default.
 | `$$...\int...$$` | `#mitex(\`...\`)` |
 | `---` | `#line(length: 100%)` |
 | GFM tables | `#table(...)` |
+| `text[^1]` / `[^1]: note` | `text#footnote[note]` |
 | ` ```mermaid ` | `#mermaid("...")` |
 | ` ```diagram ` | `#block(breakable: false)[...]` |
 | `[TOC]` | `#outline(indent: auto, depth: 4)` |

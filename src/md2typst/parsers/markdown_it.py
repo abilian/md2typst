@@ -55,9 +55,11 @@ class MarkdownItParser(MarkdownParser):
 
     def __init__(self, gfm: bool = True) -> None:
         self._md = MarkdownIt("commonmark")
+        self._loaded_plugins: set[str] = set()
         if gfm:
             self._enable_gfm()
         self._enable_math()
+        self._enable_footnotes()
 
     @property
     def name(self) -> str:
@@ -73,6 +75,13 @@ class MarkdownItParser(MarkdownParser):
         from mdit_py_plugins.dollarmath import dollarmath_plugin
 
         self._md.use(dollarmath_plugin)
+
+    def _enable_footnotes(self) -> None:
+        """Enable footnote support."""
+        from mdit_py_plugins.footnote import footnote_plugin
+
+        self._md.use(footnote_plugin)
+        self._loaded_plugins.add("mdit_py_plugins.footnote")
 
     def configure(self, options: dict[str, Any]) -> None:
         """Configure the parser.
@@ -105,6 +114,9 @@ class MarkdownItParser(MarkdownParser):
         Special handling for certain plugins:
             - 'mdit_py_plugins.attrs': Enables spans=True by default for index entries
         """
+        if plugin in self._loaded_plugins:
+            return
+        self._loaded_plugins.add(plugin)
         module = importlib.import_module(plugin)
 
         # Special handling for attrs plugin to enable span parsing

@@ -51,8 +51,12 @@ class MarkoParser(MarkdownParser):
     """Parser adapter for marko."""
 
     def __init__(self, gfm: bool = True) -> None:
-        extensions = ["gfm"] if gfm else []
+        extensions: list[Any] = ["gfm"] if gfm else []
+        extensions.append("footnote")
         self._md = marko.Markdown(extensions=extensions)
+        self._loaded_plugins: set[str] = {"footnote"}
+        if gfm:
+            self._loaded_plugins.add("gfm")
 
     @property
     def name(self) -> str:
@@ -75,6 +79,9 @@ class MarkoParser(MarkdownParser):
             plugin: Extension name (e.g., 'gfm', 'codehilite', 'toc')
             **kwargs: Extension-specific options
         """
+        if plugin in self._loaded_plugins:
+            return
+        self._loaded_plugins.add(plugin)
         self._md.use(plugin)
 
     def parse(self, text: str) -> Document:

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Footnotes enabled by default**: `[^1]` footnote references and `[^1]: ...` definitions now work out of the box on all three parsers (markdown-it, mistune, marko), rendering as Typst `#footnote[...]`. `load_plugin()` is now idempotent, so explicitly loading the footnote plugin is a no-op.
+
 - **Multiple input files**: `md2typst *.md` and `md2pdf *.md` now accept multiple arguments, converting each file in turn
 
 - **`[TOC]` support**: A standalone `[TOC]` paragraph is converted to `#outline(indent: auto, depth: 4)` for table of contents generation
