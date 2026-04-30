@@ -6,7 +6,7 @@ A robust Markdown to [Typst](https://typst.app/) converter in Python with suppor
 
 - **Multiple parser backends**: Choose from markdown-it-py, mistune, or marko at runtime
 - **GFM support**: Tables, strikethrough, footnotes, and other GitHub Flavored Markdown extensions
-- **Math support**: `$...$` and `$$...$$` rendered via [mitex](https://typst.app/universe/package/mitex/), enabled by default
+- **Math support**: `$...$` and `$$...$$` rendered via [mitex](https://typst.app/universe/package/mitex/) (currency-safe: `$5 to $10` stays literal)
 - **Mermaid diagrams**: ` ```mermaid ` code blocks rendered via [mmdr](https://typst.app/universe/package/mmdr/)
 - **Auto-imports**: Required Typst packages are automatically imported based on content
 - **Direct PDF output**: `md2pdf` command converts Markdown to PDF in one step (requires `typst` CLI)
@@ -224,7 +224,7 @@ The output ordering is: variables, stylesheet imports, package imports, `#set` d
 
 ### Math
 
-Dollar-sign math syntax is enabled by default (markdown-it and mistune parsers). The [mitex](https://typst.app/universe/package/mitex/) package import is added automatically when math is detected.
+Dollar-sign math syntax is enabled by default with the `markdown-it` parser. The [mitex](https://typst.app/universe/package/mitex/) package import is added automatically when math is detected.
 
 ```markdown
 Inline: $E = mc^2$
@@ -234,6 +234,10 @@ $$
 \int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
 $$
 ```
+
+**Currency safety**: `markdown-it` is configured with `allow_digits=False`, so text like `$5 to $10 per month` is treated as literal currency, not math. Math expressions still work as long as the opening `$` is followed by a non-digit (letter, backslash, etc.).
+
+The `mistune` parser does not enable math by default (its hardcoded regex would mis-parse currency); opt in with `--plugin math` if you need it. `marko` has no built-in math support.
 
 ### Mermaid Diagrams
 

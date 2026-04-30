@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - Unreleased
+
+### Fixed
+
+- **Currency text no longer mis-parsed as math**: `$5 to $10 per month` is now treated as literal text rather than inline math. `markdown-it` uses `allow_digits=False` for `dollarmath`; `mistune`'s math plugin (whose regex has no equivalent option) is no longer enabled by default — opt in with `--plugin math` if needed.
+
 ## [0.3.3] - 2026-04-12
 
 ### Added

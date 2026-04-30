@@ -137,3 +137,32 @@ class TestMathWithoutPlugin:
         result = generate_typst(doc)
         # Should be treated as literal text ($ escaped)
         assert "\\$100" in result
+
+
+class TestCurrencyVsMath:
+    """Currency-style ``$5 to $10`` must not be parsed as inline math."""
+
+    def test_markdown_it_currency_pair_not_math(self):
+        parser = MarkdownItParser()
+        doc = parser.parse("Costs $5 to $10 per month.")
+        result = generate_typst(doc)
+        # Both dollar signs preserved as literals, no #mi(...) wrapping
+        assert "\\$5" in result
+        assert "\\$10" in result
+        assert "#mi(" not in result
+
+    def test_markdown_it_letter_math_still_works(self):
+        parser = MarkdownItParser()
+        doc = parser.parse("Energy is $E=mc^2$ here.")
+        result = generate_typst(doc)
+        # Letter after $ → still parsed as math
+        assert "#mi(" in result
+
+    def test_mistune_currency_default(self):
+        """mistune no longer enables math by default; $ is literal."""
+        parser = MistuneParser()
+        doc = parser.parse("Costs $5 to $10 per month.")
+        result = generate_typst(doc)
+        assert "\\$5" in result
+        assert "\\$10" in result
+        assert "#mi(" not in result

@@ -71,10 +71,15 @@ class MarkdownItParser(MarkdownParser):
         self._md.enable("strikethrough")
 
     def _enable_math(self) -> None:
-        """Enable math support (dollarmath plugin)."""
+        """Enable math support (dollarmath plugin).
+
+        Uses ``allow_digits=False`` so currency text like ``$5 to $10``
+        is not mis-parsed as inline math. ``$E=mc^2$`` and similar
+        expressions starting with a letter still work.
+        """
         from mdit_py_plugins.dollarmath import dollarmath_plugin
 
-        self._md.use(dollarmath_plugin)
+        self._md.use(dollarmath_plugin, allow_digits=False)
 
     def _enable_footnotes(self) -> None:
         """Enable footnote support."""

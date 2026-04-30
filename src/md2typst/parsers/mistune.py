@@ -53,8 +53,6 @@ class MistuneParser(MarkdownParser):
 
     def __init__(self, gfm: bool = True) -> None:
         plugins = list(GFM_PLUGINS) if gfm else []
-        if "math" not in plugins:
-            plugins.append("math")
         self._md = mistune.create_markdown(renderer=None, plugins=plugins)
         self._plugins = plugins
 
