@@ -235,7 +235,7 @@ $$
 $$
 ```
 
-**Currency safety**: `markdown-it` is configured with `allow_digits=False`, so text like `$5 to $10 per month` is treated as literal currency, not math. Math expressions still work as long as the opening `$` is followed by a non-digit (letter, backslash, etc.).
+**Currency safety**: `markdown-it` is configured with `allow_space=False` and `allow_digits=False`, so text like `$5 to $10 per month` or `$5 to $X` is treated as literal currency. Compact math expressions (`$E=mc^2$`, `$x_1$`) still work; space-padded forms (`$ x = 1 $`) are not recognized as math — write them without spaces around the delimiters.
 
 The `mistune` parser does not enable math by default (its hardcoded regex would mis-parse currency); opt in with `--plugin math` if you need it. `marko` has no built-in math support.
 

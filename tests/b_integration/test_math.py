@@ -140,22 +140,31 @@ class TestMathWithoutPlugin:
 
 
 class TestCurrencyVsMath:
-    """Currency-style ``$5 to $10`` must not be parsed as inline math."""
+    """Currency-style dollar amounts must not be parsed as inline math."""
 
-    def test_markdown_it_currency_pair_not_math(self):
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Costs $5 to $10 per month.",
+            "Range $5 to $X varies.",
+            "Heroku: $25 to $50/month, AWS at $X dollars.",
+            "Object storage at $0.023/GB-month vs $0.012/GB-month.",
+            "AWS t3.medium on-demand: ~$30/month (us-east-1)",
+        ],
+    )
+    def test_markdown_it_currency_not_math(self, text):
         parser = MarkdownItParser()
-        doc = parser.parse("Costs $5 to $10 per month.")
+        doc = parser.parse(text)
         result = generate_typst(doc)
-        # Both dollar signs preserved as literals, no #mi(...) wrapping
-        assert "\\$5" in result
-        assert "\\$10" in result
-        assert "#mi(" not in result
+        # No math wrapping for any currency-like input
+        assert "#mi(" not in result, f"unexpected math in: {text!r} -> {result!r}"
+        assert "#mitex(" not in result
 
     def test_markdown_it_letter_math_still_works(self):
         parser = MarkdownItParser()
         doc = parser.parse("Energy is $E=mc^2$ here.")
         result = generate_typst(doc)
-        # Letter after $ → still parsed as math
+        # Compact math (no spaces, letter-led) → still parsed as math
         assert "#mi(" in result
 
     def test_mistune_currency_default(self):

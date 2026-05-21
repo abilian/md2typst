@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Currency text no longer mis-parsed as math**: `$5 to $10 per month` is now treated as literal text rather than inline math. `markdown-it` uses `allow_digits=False` for `dollarmath`; `mistune`'s math plugin (whose regex has no equivalent option) is no longer enabled by default — opt in with `--plugin math` if needed.
+- **Currency text no longer mis-parsed as math**: `$5 to $10 per month` or `$5 to $X` is now treated as literal text rather than inline math. `markdown-it` uses `allow_space=False, allow_digits=False` for `dollarmath`; inline math must be compact (no spaces inside delimiters, e.g. `$E=mc^2$`). `mistune`'s math plugin (whose regex has no equivalent options) is no longer enabled by default — opt in with `--plugin math` if needed.
 
 ## [0.3.3] - 2026-04-12
 
