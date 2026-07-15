@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any
 from md2typst.generator import generate_typst
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from md2typst.config import Config
 from md2typst.parsers import get_parser
 
@@ -50,12 +52,18 @@ def convert(
     return generate_typst(doc, note_style=note_style, stylesheets=stylesheets)
 
 
-def convert_with_config(markdown: str, config: Config) -> str:
+def convert_with_config(
+    markdown: str,
+    config: Config,
+    mermaid_render: Callable[[str], str] | None = None,
+) -> str:
     """Convert Markdown text to Typst using a Config object.
 
     Args:
         markdown: The Markdown source text.
         config: Configuration object.
+        mermaid_render: Optional Mermaid-block renderer for the ``cli`` backend.
+            Injected by the CLI shell since it performs subprocess/file I/O.
 
     Returns:
         The generated Typst source code.
@@ -83,4 +91,5 @@ def convert_with_config(markdown: str, config: Config) -> str:
         note_style=note_style,
         stylesheets=resolved.stylesheets,
         style=resolved.style,
+        mermaid_render=mermaid_render,
     )

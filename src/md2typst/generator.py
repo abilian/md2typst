@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, cast
 from .config import Style
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .ast import Node
 
 from .ast import (
@@ -60,6 +62,16 @@ def escape_typst_string(text: str) -> str:
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
+# mmdr's renderer (mermaid-rs-renderer) has no htmlLabels support, so inline
+# formatting tags in labels print literally (e.g. "<b>check</b>"). Strip them;
+# <br> line breaks are kept since the renderer does handle those.
+# ponytail: known formatting tags only, extend the alternation if more show up.
+MERMAID_UNSUPPORTED_TAGS = re.compile(
+    r"</?(?:b|strong|i|em|u|s|code|span|mark|sub|sup|del|ins)\b[^>]*>",
+    re.IGNORECASE,
+)
+
+
 class TypstGenerator:
     """Generates Typst code from AST."""
 
@@ -68,6 +80,7 @@ class TypstGenerator:
         note_style: str = "footnote",
         stylesheets: list[str] | None = None,
         style: Style | None = None,
+        mermaid_render: Callable[[str], str] | None = None,
     ) -> None:
         """Initialize the generator.
 
@@ -77,6 +90,10 @@ class TypstGenerator:
                 - "endnote": Superscript numbers with notes collected at end
             stylesheets: List of Typst stylesheet modules to import.
             style: Typst styling options (font, language, page, preamble).
+            mermaid_render: Optional callback that renders a Mermaid block's
+                source to a Typst snippet (e.g. ``#image("d.pdf")``). When set,
+                it replaces the default ``#mermaid(...)`` output and its mmdr
+                package import.
         """
         self._indent_level = 0
         self._in_list = False
@@ -84,6 +101,7 @@ class TypstGenerator:
         self._note_style = note_style
         self._stylesheets = stylesheets or []
         self._style = style or Style()
+        self._mermaid_render = mermaid_render
         # Track endnote references in order for numbering
         self._endnote_refs: list[str] = []
 
@@ -241,8 +259,10 @@ class TypstGenerator:
         if not isinstance(nodes, tuple):
             return
         for node in nodes:
-            import_stmt = self._PACKAGE_IMPORTS.get(type(node))
-            if import_stmt:
+            # cli backend pre-renders mermaid to #image, so mmdr isn't needed.
+            if isinstance(node, MermaidBlock) and self._mermaid_render is not None:
+                pass
+            elif import_stmt := self._PACKAGE_IMPORTS.get(type(node)):
                 needed.add(import_stmt)
             if hasattr(node, "children"):
                 self._scan_nodes(node.children, needed)
@@ -824,8 +844,10 @@ class TypstGenerator:
 
         Requires: #import "@preview/mmdr:0.2.1": mermaid
         """
-        content = escape_typst_string(node.code.strip())
-        return f'#mermaid("{content}")'
+        if self._mermaid_render is not None:
+            return self._mermaid_render(node.code.strip())
+        code = MERMAID_UNSUPPORTED_TAGS.sub("", node.code.strip())
+        return f'#mermaid("{escape_typst_string(code)}")'
 
     def visit_DiagramBlock(self, node: DiagramBlock) -> str:
         """Convert diagram block to an unbreakable Typst raw block.
@@ -842,6 +864,7 @@ def generate_typst(
     note_style: str = "footnote",
     stylesheets: list[str] | None = None,
     style: Style | None = None,
+    mermaid_render: Callable[[str], str] | None = None,
 ) -> str:
     """Convenience function to generate Typst from a Document.
 
@@ -850,10 +873,12 @@ def generate_typst(
         note_style: How to render footnotes ("footnote" or "endnote").
         stylesheets: List of Typst stylesheet modules to import.
         style: Typst styling options (font, language, page, preamble).
+        mermaid_render: Optional Mermaid-block renderer (see TypstGenerator).
     """
     generator = TypstGenerator(
         note_style=note_style,
         stylesheets=stylesheets,
         style=style,
+        mermaid_render=mermaid_render,
     )
     return generator.generate(doc)

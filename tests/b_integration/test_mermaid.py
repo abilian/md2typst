@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from md2typst import convert
+from md2typst.generator import generate_typst
+from md2typst.parsers import get_parser
 
 MERMAID_SIMPLE = """\
 ```mermaid
@@ -57,6 +59,24 @@ class TestMermaidParsing:
         md = "```python\nprint('hello')\n```\n"
         result = convert(md, parser=parser)
         assert "mmdr" not in result
+
+    @pytest.mark.parametrize("parser", ["markdown-it", "mistune", "marko"])
+    def test_strips_unsupported_html_tags(self, parser: str) -> None:
+        """mmdr's renderer can't render <b>/<i>/etc., so they are stripped."""
+        md = '```mermaid\nflowchart TB\n  A["<b>check</b><br/>ok"]\n```\n'
+        result = convert(md, parser=parser)
+        assert "<b>" not in result
+        assert "</b>" not in result
+        assert "check" in result
+        assert "<br/>" in result  # line breaks are kept
+
+    def test_cli_backend_uses_injected_renderer(self) -> None:
+        """A mermaid_render callback replaces #mermaid() and the mmdr import."""
+        doc = get_parser("markdown-it").parse(MERMAID_SIMPLE)
+        result = generate_typst(doc, mermaid_render=lambda code: '#image("d.pdf")')
+        assert '#image("d.pdf")' in result
+        assert "#mermaid(" not in result
+        assert "mmdr" not in result  # import suppressed for the cli backend
 
     @pytest.mark.parametrize("parser", ["markdown-it", "mistune", "marko"])
     def test_non_mermaid_code_block_unchanged(self, parser: str) -> None:

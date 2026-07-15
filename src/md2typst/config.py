@@ -91,6 +91,9 @@ class Config:
     style: Style = field(default_factory=Style)
     default_class: str | None = None
     classes: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # "mmdr": render at Typst-compile time via the @preview/mmdr package.
+    # "cli": pre-render via the official mermaid-cli (mmdc), embed a PDF.
+    mermaid_backend: str = "mmdr"
 
     def merge(self, other: dict[str, Any]) -> Config:
         """Merge another config dict into this one, returning a new Config.
@@ -108,6 +111,7 @@ class Config:
             style=self.style.merge(other.get("style", {})),
             default_class=other.get("default_class", self.default_class),
             classes=merged_classes,
+            mermaid_backend=other.get("mermaid_backend", self.mermaid_backend),
         )
 
     def resolve_class(self, class_name: str | None = None) -> Config:
@@ -146,6 +150,7 @@ class Config:
             style=resolved,
             default_class=self.default_class,
             classes=self.classes,
+            mermaid_backend=self.mermaid_backend,
         )
 
     @classmethod
