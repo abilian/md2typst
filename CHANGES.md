@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.6 - 2026-07-15
+
+### Added
+
+- **`cli` Mermaid backend**: `--mermaid cli` (or `mermaid_backend = "cli"` in config) pre-renders each diagram to a PDF with the official [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) (`mmdc`, i.e. mermaid.js in headless Chrome) and embeds it via `#image(...)`, instead of the default `mmdr` package. This is fully faithful to the Mermaid spec — including HTML formatting like `<b>` bold labels. Requires `npm install -g @mermaid-js/mermaid-cli` plus a headless Chrome; rendered PDFs are written next to the output. PDF (not SVG) is used because Typst's SVG renderer can't draw the `<foreignObject>` Mermaid emits for HTML labels ([typst#1421](https://github.com/typst/typst/issues/1421)).
+
+### Fixed
+
+- **Mermaid labels no longer show literal HTML tags** on the default `mmdr` backend: its Rust renderer has no `htmlLabels` support, so inline formatting tags (`<b>`, `<i>`, `<strong>`, `<em>`, …) previously appeared verbatim in diagrams. They are now stripped from labels; `<br/>` line breaks are kept. For faithful rendering of such tags, use the new `--mermaid cli` backend.
+
 ## [0.3.5] - 2026-04-12
 
 ### Fixed

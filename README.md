@@ -7,7 +7,7 @@ A robust Markdown to [Typst](https://typst.app/) converter in Python with suppor
 - **Multiple parser backends**: Choose from markdown-it-py, mistune, or marko at runtime
 - **GFM support**: Tables, strikethrough, footnotes, and other GitHub Flavored Markdown extensions
 - **Math support**: `$...$` and `$$...$$` rendered via [mitex](https://typst.app/universe/package/mitex/) (currency-safe: `$5 to $10` stays literal)
-- **Mermaid diagrams**: ` ```mermaid ` code blocks rendered via [mmdr](https://typst.app/universe/package/mmdr/)
+- **Mermaid diagrams**: ` ```mermaid ` code blocks rendered via [mmdr](https://typst.app/universe/package/mmdr/), or fully faithful (bold labels and all) via [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) with `--mermaid cli`
 - **Auto-imports**: Required Typst packages are automatically imported based on content
 - **Direct PDF output**: `md2pdf` command converts Markdown to PDF in one step (requires `typst` CLI)
 - **Document classes**: `article`, `report`, and `book` presets (like LaTeX), selectable via front matter, CLI, or config
@@ -252,6 +252,21 @@ graph LR
 ```
 ````
 
+#### Backends
+
+Two backends are available via `--mermaid` (or `mermaid_backend` in config):
+
+| Backend | How it renders | Notes |
+|---------|----------------|-------|
+| `mmdr` (default) | `#mermaid(...)` at Typst-compile time via the mmdr package | No extra tooling. Its Rust renderer has no `htmlLabels` support, so inline formatting tags (`<b>`, `<i>`, …) are stripped from labels; `<br/>` line breaks are kept. |
+| `cli` | Pre-renders each diagram to a PDF via the official [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) (`mmdc`) and embeds it with `#image(...)` | Fully faithful to the Mermaid spec, including bold labels. Requires `npm install -g @mermaid-js/mermaid-cli` plus a headless Chrome. PDFs are written next to the output. |
+
+```bash
+md2typst diagram.md --mermaid cli      # faithful PDF rendering via mermaid-cli
+```
+
+PDF (not SVG) is used because Typst's SVG renderer cannot draw the `<foreignObject>` Mermaid emits for HTML labels ([typst#1421](https://github.com/typst/typst/issues/1421)).
+
 ### Diagram Blocks
 
 Use ` ```diagram ` for ASCII-art or box-drawing diagrams that must not break across pages:
@@ -333,6 +348,7 @@ Options:
   -o, --output FILE      Output file (default: <input>.typ, or stdout for stdin)
   -p, --parser NAME      Parser to use (markdown-it, mistune, marko)
   --class NAME           Document class (article, report, book)
+  --mermaid [mmdr|cli]   Mermaid backend (default: mmdr; cli uses mermaid-cli)
   --plugin NAME          Load parser plugin (can be repeated)
   --stylesheet NAME      Import Typst stylesheet (can be repeated)
   --config FILE          Path to configuration file

@@ -1,6 +1,6 @@
 [project]
 name = "md2typst"
-version = "0.3.5"
+version = "0.3.6"
 description = "Markdown to Typst converter with multiple parser support"
 readme = "README.md"
 authors = [
@@ -59,4 +59,10 @@ markers = [
     "e2e: End-to-end tests (full workflow)",
     "benchmark: Benchmark tests (slow, run with -m benchmark)",
     "slow: Slow tests",
+]
+
+[tool.pyrefly]
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
 ]
