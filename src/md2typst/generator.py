@@ -136,11 +136,13 @@ class TypstGenerator:
         # Prepend front matter variables, stylesheet imports, and preamble
         prepended: list[str] = []
 
-        # Extract front matter preamble and stylesheets (if present)
+        # Extract front matter preamble/postamble and stylesheets (if present)
         fm_preamble = ""
+        fm_postamble = ""
         extra_stylesheets: list[str] = []
         if doc.metadata:
             fm_preamble = doc.metadata.get("preamble", "") or ""
+            fm_postamble = doc.metadata.get("postamble", "") or ""
             # Support both 'stylesheet' (single) and 'stylesheets' (list) in front matter
             fm_stylesheet = doc.metadata.get("stylesheet")
             fm_stylesheets = doc.metadata.get("stylesheets", [])
@@ -205,6 +207,16 @@ class TypstGenerator:
 
         if prepended:
             result = "\n\n".join(prepended) + "\n\n" + result
+
+        # Append trailing Typst (e.g. #bibliography(...)): config/class style
+        # postamble first, then front matter postamble.
+        postamble_parts: list[str] = []
+        if effective_style.postamble:
+            postamble_parts.append(effective_style.postamble.strip())
+        if fm_postamble and isinstance(fm_postamble, str):
+            postamble_parts.append(fm_postamble.strip())
+        if postamble_parts:
+            result = result + "\n\n" + "\n\n".join(postamble_parts)
 
         return result
 
@@ -378,7 +390,7 @@ class TypstGenerator:
     )
 
     RESERVED_FRONTMATTER_KEYS: ClassVar[frozenset[str]] = frozenset(
-        {"preamble", "stylesheet", "stylesheets", "class"}
+        {"preamble", "postamble", "stylesheet", "stylesheets", "class"}
     ) | frozenset({"font", "font_size", "language", "paper", "margin"})
 
     def _generate_frontmatter_variables(self, metadata: dict) -> str:

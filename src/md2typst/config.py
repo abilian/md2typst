@@ -37,17 +37,20 @@ class Style:
     paper: str | None = None
     margin: str | None = None
     preamble: str = ""
+    postamble: str = ""
 
     def merge(self, other: dict[str, Any]) -> Style:
         """Merge another style dict into this one, returning a new Style.
 
         Scalar fields from `other` override self when present.
-        `preamble` is concatenated (self first, then other).
+        `preamble`/`postamble` are concatenated (self first, then other).
         `font` accepts str or list[str]; overrides if set.
         """
         font = self._coerce_font(other.get("font")) if "font" in other else self.font
         other_preamble = other.get("preamble", "")
         merged_preamble = "\n".join(p for p in (self.preamble, other_preamble) if p)
+        other_postamble = other.get("postamble", "")
+        merged_postamble = "\n".join(p for p in (self.postamble, other_postamble) if p)
         return Style(
             font=font,
             font_size=other.get("font_size", self.font_size),
@@ -55,6 +58,7 @@ class Style:
             paper=other.get("paper", self.paper),
             margin=other.get("margin", self.margin),
             preamble=merged_preamble,
+            postamble=merged_postamble,
         )
 
     @staticmethod
@@ -131,7 +135,7 @@ class Config:
         if not name or name not in self.classes:
             return self
         class_style = dict(self.classes[name])
-        # Class preamble replaces base preamble (not concatenate)
+        # Class preamble/postamble replace the base ones (not concatenate)
         base_style = Style(
             font=self.style.font,
             font_size=self.style.font_size,
@@ -139,6 +143,7 @@ class Config:
             paper=self.style.paper,
             margin=self.style.margin,
             preamble="",  # clear base preamble before merge
+            postamble="",  # clear base postamble before merge
         )
         resolved = base_style.merge(class_style)
         return Config(

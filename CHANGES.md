@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`postamble` (trailing Typst)**: a `postamble` field in `[style]`, document classes, and front matter emits raw Typst **after** the body, mirroring `preamble` (which emits before). This completes the workflow for [Typst templates](README.md#typst-templates) such as [faithful-acmart](https://typst.app/universe/package/faithful-acmart/): `preamble` imports the template and applies its `#show: template.with(...)` rule, the Markdown becomes the body, and `postamble` emits end matter like `#bibliography("refs.bib")`. Concatenates with config/class postamble (front matter last); a document class replaces the base postamble as it does for `preamble`.
+
 ## 0.3.6 - 2026-07-15
 
 ### Added

@@ -302,6 +302,24 @@ preamble: |
         # Title should still be a variable
         assert '#let doc-title = "My Document"' in result
 
+    def test_postamble_in_frontmatter(self):
+        """Postamble is emitted verbatim after the body (e.g. #bibliography)."""
+        markdown = """---
+preamble: |
+  #show: template.with(title: "T")
+postamble: |
+  #bibliography("refs.bib")
+---
+
+# Content
+"""
+        result = convert(markdown)
+        assert '#bibliography("refs.bib")' in result
+        # Postamble is not turned into a variable, and comes after the body.
+        assert "doc-postamble" not in result
+        assert result.index("= Content") < result.index("#bibliography")
+        assert result.index("#show: template.with") < result.index("= Content")
+
     def test_stylesheet_in_frontmatter(self):
         """Test that stylesheet in front matter is imported."""
         markdown = """---
