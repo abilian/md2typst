@@ -144,11 +144,14 @@ language = "en"
 paper = "a4"
 margin = "2.5cm"
 
-# Raw Typst code appended after structured fields
+# Raw Typst code emitted before the body (after the structured fields above)
 preamble = """
 #set par(justify: true, first-line-indent: 1em)
 #show heading.where(level: 1): it => { it; v(0.5em) }
 """
+
+# Raw Typst code emitted after the body, e.g. a bibliography (see Typst Templates)
+# postamble = '#bibliography("refs.bib")'
 ```
 
 This generates at the top of every converted document:
@@ -185,7 +188,8 @@ plugins = ["gfm"]
 
 Markdown files can include YAML front matter. Any field is exposed as a `#let doc-<key>` variable in Typst, **except** reserved keys with special handling:
 
-- `preamble` — raw Typst code, concatenated with config `style.preamble`
+- `preamble` — raw Typst code emitted **before** the body, concatenated with config `style.preamble`
+- `postamble` — raw Typst code emitted **after** the body (e.g. `#bibliography(...)`), concatenated with config `style.postamble`
 - `stylesheet` / `stylesheets` — additional Typst modules to import
 - `font`, `font_size`, `language`, `paper`, `margin` — override the corresponding `[style]` fields at document level
 
@@ -220,7 +224,65 @@ This generates:
 = Hello World
 ```
 
-The output ordering is: variables, stylesheet imports, package imports, `#set` directives from `[style]`, preamble, then content.
+The output ordering is: variables, stylesheet imports, package imports, `#set` directives from `[style]`, preamble, content, then postamble.
+
+### Typst Templates
+
+Typst templates (like [faithful-acmart](https://typst.app/universe/package/faithful-acmart/), or any package that exposes a `#show: template.with(...)` rule) work directly through `preamble` and `postamble`: the `preamble` imports the template and applies the show rule, your Markdown becomes the body, and the `postamble` emits trailing content such as the bibliography.
+
+```markdown
+---
+preamble: |
+  #import "@preview/faithful-acmart:0.1.0": *
+  #show: acmart.with(
+    format: "acmsmall",
+    title: "A Faithful Paper",
+    authors: (
+      (
+        name: "Ada Lovelace",
+        email: "ada@example.org",
+        affiliation: (institution: "Analytical Engine Co.", city: "London", country: "UK"),
+      ),
+    ),
+    abstract: [We convert Markdown to Typst, faithfully.],
+  )
+postamble: |
+  #bibliography("refs.bib")
+---
+
+# Introduction
+
+The body is plain **Markdown**, rendered through the ACM template.
+```
+
+The template's arguments (authors, affiliations, …) are written as literal Typst inside `preamble`, since each template has its own parameter shape. Do **not** also set the reserved `title`/`author` front-matter keys — those drive md2typst's own built-in title block, which you don't want when a template owns the title.
+
+**Reusable across documents.** Put the template setup in a [document class](#document-classes) so each paper only supplies its own metadata:
+
+```toml
+# md2typst.toml
+default_class = "acmart"
+
+[classes.acmart]
+preamble = """
+#import "@preview/faithful-acmart:0.1.0": *
+#show: acmart.with(title: doc-paper-title, abstract: [#doc-abstract])
+"""
+postamble = '#bibliography("refs.bib")'
+```
+
+```markdown
+---
+paper-title: A Faithful Paper
+abstract: We convert Markdown to Typst, faithfully.
+---
+
+# Introduction
+```
+
+Each front-matter key becomes a `#let doc-<key> = ...` variable (hyphenated) that the class preamble references — here `doc-paper-title` and `doc-abstract`. **Use non-reserved key names** (e.g. `paper-title`, not `title`): the reserved keys `title`, `subtitle`, `author`, `authors`, `date`, `version`, `publisher` also trigger md2typst's own built-in title block, which you don't want when the template renders the title. Front matter → Typst conversion covers scalars and lists of scalars; deeply nested template arguments (e.g. ACM's per-author affiliation dicts) are best written inline in `preamble` as shown above.
+
+> **Citations:** Pandoc-style `@key` / `[@key]` citations are not yet parsed — `@` is escaped as literal text. For now, put `#cite(<key>)` calls in `preamble`/`postamble` or hand-written raw sections, and the `#bibliography(...)` in `postamble`.
 
 ### Math
 
