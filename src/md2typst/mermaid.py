@@ -70,8 +70,10 @@ def _run_mmdc(mmdc: str, code: str, out_pdf: Path) -> None:
         tmp.write(code)
         mmd_path = Path(tmp.name)
     try:
+        # -f/--pdfFit sizes the PDF page to the diagram; without it mmdc emits a
+        # full default page, leaving large whitespace below the diagram.
         result = subprocess.run(  # noqa: S603
-            [mmdc, "-i", str(mmd_path), "-o", str(out_pdf), "-b", "white"],
+            [mmdc, "-i", str(mmd_path), "-o", str(out_pdf), "-f"],
             capture_output=True,
             text=True,
             check=False,

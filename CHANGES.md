@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`cli` Mermaid backend**: `--mermaid cli` (or `mermaid_backend = "cli"` in config) pre-renders each diagram to a PDF with the official [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) (`mmdc`, i.e. mermaid.js in headless Chrome) and embeds it via `#image(...)`, instead of the default `mmdr` package. This is fully faithful to the Mermaid spec — including HTML formatting like `<b>` bold labels. Requires `npm install -g @mermaid-js/mermaid-cli` plus a headless Chrome; rendered PDFs are written next to the output. PDF (not SVG) is used because Typst's SVG renderer can't draw the `<foreignObject>` Mermaid emits for HTML labels ([typst#1421](https://github.com/typst/typst/issues/1421)).
+- **`cli` Mermaid backend**: `--mermaid cli` (or `mermaid_backend = "cli"` in config) pre-renders each diagram to a PDF with the official [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) (`mmdc`, i.e. mermaid.js in headless Chrome) and embeds it via `#image(...)`, instead of the default `mmdr` package. This is fully faithful to the Mermaid spec — including HTML formatting like `<b>` bold labels. The PDF page is sized to the diagram's bounding box (`mmdc --pdfFit`), so there is no surrounding whitespace. Requires `npm install -g @mermaid-js/mermaid-cli` plus a headless Chrome; rendered PDFs are written next to the output. PDF (not SVG) is used because Typst's SVG renderer can't draw the `<foreignObject>` Mermaid emits for HTML labels ([typst#1421](https://github.com/typst/typst/issues/1421)).
 
 ### Fixed
 
