@@ -110,7 +110,7 @@ All parsers have GFM extensions (tables, strikethrough, footnotes) enabled by de
 | `![alt](url)` | `#image("url", alt: "alt")` |
 | `> quote` | `#block(...)[quote]` |
 | `$E=mc^2$` | `#mi("E=mc^2")` |
-| `$$...\int...$$` | `#mitex(\`...\`)` |
+| `$$...\int...$$` | ```#mitex(`...`)``` |
 | `---` | `#line(length: 100%)` |
 | GFM tables | `#table(...)` |
 | `text[^1]` / `[^1]: note` | `text#footnote[note]` |
