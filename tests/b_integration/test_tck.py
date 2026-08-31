@@ -197,8 +197,9 @@ class TestCommonMarkTCK:
         md = "> This is a quote."
         result = convert(md, parser=parser_name)
 
-        # We use #block for blockquotes (styled like a quote)
-        assert "#block(" in result or "#quote[" in result
+        # A blockquote is emitted as the semantic element, so a stylesheet
+        # can decide how it looks.
+        assert "#quote(block: true)" in result
         assert "This is a quote." in result
 
     @pytest.mark.parametrize("parser_name", ALL_PARSERS)

@@ -80,7 +80,7 @@ def hello():
         md = "> This is a quote"
         result = convert(md)
         assert "This is a quote" in result
-        assert "#block" in result
+        assert "#quote(block: true)" in result
 
     def test_thematic_break_conversion(self):
         md = "---"
@@ -136,7 +136,7 @@ Check out [this link](https://example.com)!
         assert "- Point A" in result
 
         # Check quote
-        assert "#block" in result
+        assert "#quote(block: true)" in result
 
         # Check link
         assert '#link("https://example.com")' in result

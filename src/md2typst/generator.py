@@ -71,6 +71,10 @@ MERMAID_UNSUPPORTED_TAGS = re.compile(
     re.IGNORECASE,
 )
 
+#: A word character opening the next sibling, which would glue itself to a
+#: closing `*` or `_` and stop Typst from closing the span.
+WORD_START = re.compile(r"\w")
+
 
 class TypstGenerator:
     """Generates Typst code from AST."""
@@ -518,9 +522,11 @@ class TypstGenerator:
                 content_parts.append(result)
         content = "\n\n".join(content_parts)
 
-        # Use #blockquote or styled block
-        # For now, use a simple approach with #block
-        return f"#block(inset: (left: 1em), stroke: (left: 2pt + luma(200)))[\n{content}\n]"
+        # `#quote(block: true)` rather than a pre-styled `#block`: emitting the
+        # inset and the rule here bakes a visual decision into the output, and
+        # a stylesheet cannot then override it — `show quote.where(block: true)`
+        # never fires. The semantic element leaves the look to the document.
+        return f"#quote(block: true)[\n{content}\n]"
 
     def visit_List(self, node: List) -> str:
         """Convert list to Typst."""
@@ -634,10 +640,20 @@ class TypstGenerator:
 
     def _visit_children_inline(self, children: tuple[Node, ...]) -> str:
         """Visit all children and concatenate results."""
-        parts: list[str] = []
-        for child in children:
-            result = self.visit(child)
-            parts.append(result)
+        parts = [self.visit(child) for child in children]
+
+        # Typst's `*…*` and `_…_` shorthands only close when the closing
+        # delimiter is not glued to a word character. `**L**egal` would emit
+        # `*L*egal`, which does not compile — the LOTEC mnemonic in the
+        # EuroStack manuscript is exactly this shape. The function form has no
+        # such rule, so use it wherever the next sibling starts with a word.
+        for index, child in enumerate(children[:-1]):
+            if isinstance(child, (Strong, Emphasis)) and WORD_START.match(
+                parts[index + 1]
+            ):
+                fn = "strong" if isinstance(child, Strong) else "emph"
+                parts[index] = f"#{fn}[{parts[index][1:-1]}]"
+
         return "".join(parts)
 
     def visit_Text(self, node: Text) -> str:

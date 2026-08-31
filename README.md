@@ -108,7 +108,7 @@ All parsers have GFM extensions (tables, strikethrough, footnotes) enabled by de
 | `` `code` `` | `` `code` `` |
 | `[text](url)` | `#link("url")[text]` |
 | `![alt](url)` | `#image("url", alt: "alt")` |
-| `> quote` | `#block(...)[quote]` |
+| `> quote` | `#quote(block: true)[...]` |
 | `$E=mc^2$` | `#mi("E=mc^2")` |
 | `$$...\int...$$` | `#mitex(\`...\`)` |
 | `---` | `#line(length: 100%)` |

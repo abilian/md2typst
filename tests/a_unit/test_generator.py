@@ -144,6 +144,48 @@ class TestInlineFormatting:
         result = generate_typst(doc)
         assert result == "*bold*"
 
+    def test_strong_glued_to_a_word_uses_the_function_form(self):
+        # `*L*egal` does not compile: Typst only closes `*…*` when the closing
+        # delimiter is not followed by a word character. This is the LOTEC
+        # mnemonic (`**L**egal, **O**perational, …`) in the EuroStack book.
+        doc = Document(
+            children=[
+                Paragraph(
+                    children=[
+                        Strong(children=[Text(content="L")]),
+                        Text(content="egal"),
+                    ]
+                )
+            ]
+        )
+        assert generate_typst(doc) == "#strong[L]egal"
+
+    def test_emphasis_glued_to_a_word_uses_the_function_form(self):
+        doc = Document(
+            children=[
+                Paragraph(
+                    children=[
+                        Emphasis(children=[Text(content="E")]),
+                        Text(content="conomic"),
+                    ]
+                )
+            ]
+        )
+        assert generate_typst(doc) == "#emph[E]conomic"
+
+    def test_strong_followed_by_punctuation_stays_compact(self):
+        doc = Document(
+            children=[
+                Paragraph(
+                    children=[
+                        Strong(children=[Text(content="bold")]),
+                        Text(content=", suite"),
+                    ]
+                )
+            ]
+        )
+        assert generate_typst(doc) == "*bold*, suite"
+
     def test_nested_formatting(self):
         # **_bold italic_**
         doc = Document(
@@ -321,7 +363,7 @@ class TestBlockQuotes:
             ]
         )
         result = generate_typst(doc)
-        assert "#block" in result
+        assert "#quote(block: true)" in result
         assert "A quote" in result
 
 
