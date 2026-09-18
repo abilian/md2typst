@@ -6,7 +6,7 @@ check: lint
 
 lint:
 	uv run ruff check src tests
-	uv run ruff format . --check
+	uv run ruff format src tests --check
 	uv run ty check src
 	uv run pyrefly check src
 	uv run mypy src
